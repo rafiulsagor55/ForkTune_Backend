@@ -8,8 +8,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
@@ -28,9 +26,7 @@ public class UserController {
 		try {
 			String email = payload.get("email");
 
-			// Check if email is valid and return the response
 			if (email != null && !email.isEmpty()) {
-				// Assuming the service sends a code to the email
 				return ResponseEntity.ok(Map.of("message", userService.sendcode(email)));
 			} else {
 				return ResponseEntity.badRequest().body(Map.of("message", "Invalid email"));
@@ -69,13 +65,17 @@ public class UserController {
 	public ResponseEntity<?> registerUser(@RequestBody UserDTO userDTO,
 			@RequestHeader("Authorization") String codeToken) {
 		try {
-			// Remove "Bearer " from Authorization header to extract the token
 			codeToken = codeToken.replace("Bearer ", "");
             System.out.println(userService.getEmailFromToken(codeToken));
 			if (userService.checkTokenValidity(codeToken)) {
 				userDTO.setEmail(userService.getEmailFromToken(codeToken));
 				userService.saveUserDetails(userDTO);
-				return ResponseEntity.ok().body(Map.of("message", "User registered successfully"));
+				long expirationMillis = 7 * 24 * 60 * 60 * 1000L;
+				Date now = new Date();
+				Date expiryDate = new Date(now.getTime() + expirationMillis);
+				String jwt = Jwts.builder().setSubject(userDTO.getEmail()).setExpiration(expiryDate)
+						.signWith(Keys.hmacShaKeyFor(SECRET), SignatureAlgorithm.HS256).compact();
+				return ResponseEntity.ok().body(Map.of("message", jwt));
 			} else {
 				throw new IllegalArgumentException("Something went wrong!");
 			}
@@ -92,10 +92,16 @@ public class UserController {
 		try {
 			String email = payload.get("email");
 			String password=payload.get("password");
+			long expirationMillis = 7 * 24 * 60 * 60 * 1000L;
+			Date now = new Date();
+			Date expiryDate = new Date(now.getTime() + expirationMillis);
+			
+			String jwt = Jwts.builder().setSubject(email).setExpiration(expiryDate)
+					.signWith(Keys.hmacShaKeyFor(SECRET), SignatureAlgorithm.HS256).compact();
 
-			// Check if email is valid and return the response
+
 			if (email != null && !email.isEmpty() && userService.checkpassword(email, password)) {
-				return ResponseEntity.ok(Map.of("message","Logged in successfully"));
+				return ResponseEntity.ok(Map.of("message",jwt));
 			} else {
 				return ResponseEntity.badRequest().body(Map.of("message", "Invalid email or password"));
 			}
@@ -104,36 +110,46 @@ public class UserController {
 		}
 	}
 	
+	@PostMapping("/send-code-for-reset-password")
+	public ResponseEntity<?> sendCodeForResetPassword(@RequestBody Map<String, String> payload) {
+		try {
+			String email = payload.get("email");
+
+			if (email != null && !email.isEmpty()) {
+				return ResponseEntity.ok(Map.of("message", userService.sendcodeForResetPassword(email)));
+			} else {
+				return ResponseEntity.badRequest().body(Map.of("message", "Invalid email"));
+			}
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+		}
+	}
 	
+	@PostMapping("/reset-password")
+	public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> payload,
+			@RequestHeader("Authorization") String codeToken) {
+		try {
+			codeToken = codeToken.replace("Bearer ", "");
+			String newPassword = payload.get("newPassword");
+            System.out.println(userService.getEmailFromToken(codeToken));
+			if (userService.checkTokenValidityAfter(codeToken)) {
+				userService.ResetPassword(userService.getEmailFromToken(codeToken),newPassword);
+				long expirationMillis = 7 * 24 * 60 * 60 * 1000L;
+				Date now = new Date();
+				Date expiryDate = new Date(now.getTime() + expirationMillis);
+				
+				String jwt = Jwts.builder().setSubject(userService.getEmailFromToken(codeToken)).setExpiration(expiryDate)
+						.signWith(Keys.hmacShaKeyFor(SECRET), SignatureAlgorithm.HS256).compact();
 
-//	@PostMapping("/signup")
-//	public ResponseEntity<?> signUp(@RequestBody Map<String, String> payload) {
-//		if (payload.get("email") == null || payload.get("password") == null) {
-//			return ResponseEntity.badRequest().body(Map.of("error", "Email and password are required"));
-//		}
-//
-//		if (userRepository.existsByEmail(payload.get("email"))) {
-//			return ResponseEntity.badRequest().body(Map.of("error", "Email already exists"));
-//		}
-//
-//		try {
-//			// Process the user creation
-//			User user = new User(payload.get("name"), payload.get("email"), payload.get("password"),
-//					payload.get("gender"), LocalDate.parse(payload.get("dob"), DateTimeFormatter.ISO_DATE));
-//
-//			userRepository.save(user);
-//
-//			// Ensure that a valid response is sent
-//			return ResponseEntity.ok(Map.of("message", "User registered successfully", "userId", user.getId().toString() // Send
-//																															// user
-//																															// ID
-//																															// if
-//																															// needed
-//			));
-//
-//		} catch (Exception e) {
-//			return ResponseEntity.internalServerError().body(Map.of("error", "Error registering user"));
-//		}
-//	}
+				return ResponseEntity.ok().body(Map.of("message", jwt));
+			} else {
+				throw new IllegalArgumentException("Something went wrong!");
+			}
 
+		} catch (Exception e) {
+			return ResponseEntity.internalServerError()
+					.body(Map.of("message", "Error raseting password: " + e.getMessage()));
+		}
+	}
+	
 }

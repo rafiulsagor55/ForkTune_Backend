@@ -49,6 +49,16 @@ public class UserService {
 			throw new IllegalArgumentException("You already have an account! Please Sign in.");
 		}
 	}
+	
+	public String sendcodeForResetPassword(String email) {
+		if (userRepository.doesEmailExist(email)) {
+			userRepository.deleteByEmail(email);
+			sendVerificationCode(email);
+			return "Verification code sent to: " + email;
+		} else {
+			throw new IllegalArgumentException("You already have an account! Please Sign in.");
+		}
+	}
 
 	public Boolean verifyEmail(String email, String code) {
 		int count = userRepository.getCount(email);
@@ -106,6 +116,20 @@ public class UserService {
 			return false;
 		}
 	}
+	public Boolean checkTokenValidityAfter(String jwt) {
+		if (jwt == null)
+			return false;
+		try {
+			Claims claims = Jwts.parserBuilder().setSigningKey(Keys.hmacShaKeyFor(SECRET)).build().parseClaimsJws(jwt)
+					.getBody();
+			if (userRepository.doesEmailExist(claims.getSubject())) {
+				return true;
+			}
+			return false;
+		} catch (Exception e) {
+			return false;
+		}
+	}
 	public void saveUserDetails(UserDTO userDTO) {
 		try {
 			if (!userRepository.doesEmailExist(userDTO.getEmail())) {
@@ -146,6 +170,12 @@ public class UserService {
 		Boolean flag=userRepository.checkPassword(email, password);
 		if(flag)return true;
 		else throw new IllegalArgumentException("Invalid email or password");
+	}
+	
+	public void ResetPassword(String email, String password) {
+		if(userRepository.doesEmailExist(email)) {
+			userRepository.setNewPassword(email,password);
+		}
 	}
 
 }
