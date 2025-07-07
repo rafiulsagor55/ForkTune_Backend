@@ -85,6 +85,26 @@ public class UserController {
 					.body(Map.of("message", "Error registering user: " + e.getMessage()));
 		}
 	}
+	
+	
+	@PostMapping("/login")
+	public ResponseEntity<?> Login(@RequestBody Map<String, String> payload) {
+		try {
+			String email = payload.get("email");
+			String password=payload.get("password");
+
+			// Check if email is valid and return the response
+			if (email != null && !email.isEmpty() && userService.checkpassword(email, password)) {
+				return ResponseEntity.ok(Map.of("message","Logged in successfully"));
+			} else {
+				return ResponseEntity.badRequest().body(Map.of("message", "Invalid email or password"));
+			}
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+		}
+	}
+	
+	
 
 //	@PostMapping("/signup")
 //	public ResponseEntity<?> signUp(@RequestBody Map<String, String> payload) {

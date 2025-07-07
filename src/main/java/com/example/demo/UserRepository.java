@@ -102,5 +102,18 @@ public class UserRepository {
             return user;
         });
     }
+    
+    public boolean checkPassword(String email, String password) {
+		// Correct the query by removing the extra space after :password
+		String CHECK_EMAIL_EXISTS = "SELECT COUNT(*) FROM users WHERE email = :email AND password = :password";
+
+		MapSqlParameterSource params = new MapSqlParameterSource();
+		params.addValue("email", email);
+		params.addValue("password", password);
+
+		// Execute the query correctly using named parameters
+		int count = jdbcTemplate.queryForObject(CHECK_EMAIL_EXISTS, params, Integer.class);
+		return count > 0;
+	}
 
 }

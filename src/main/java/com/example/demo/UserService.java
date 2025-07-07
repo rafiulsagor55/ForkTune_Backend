@@ -141,5 +141,11 @@ public class UserService {
 			throw new IllegalArgumentException(e.getMessage());
 		}
 	}
+	
+	public Boolean checkpassword(String email, String password) {
+		Boolean flag=userRepository.checkPassword(email, password);
+		if(flag)return true;
+		else throw new IllegalArgumentException("Invalid email or password");
+	}
 
 }
