@@ -170,5 +170,20 @@ public class UserRepository {
 
 		return count > 0;
 	}
+    
+    public int updateUserDetails(User user) {
+        String sql = "UPDATE users SET name = :name, gender = :gender, dob = :dob, profile_image = :profile_image, content_type = :content_type " +
+                     "WHERE email = :email";
+
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("name", user.getName());
+        params.addValue("gender", user.getGender());
+        params.addValue("dob", user.getDob());
+        params.addValue("profile_image", user.getProfileImageData());
+        params.addValue("email", user.getEmail());
+        params.addValue("content_type", user.getContentType());
+
+        return jdbcTemplate.update(sql, params);
+    }
 
 }

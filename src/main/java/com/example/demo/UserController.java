@@ -181,7 +181,7 @@ public class UserController {
 			            "None",
 			            "None",
 			            "None",
-			            "None"
+			            "Beginner"
 			        ));
 			}
 			else {
@@ -192,6 +192,44 @@ public class UserController {
 		}
 	}
 	
+	@PostMapping("/user/update-details")
+	public ResponseEntity<?> updateUserDetails(@RequestBody UserDTO userDTO,
+			@RequestHeader("Authorization") String token) {
+		try {
+			System.out.println(userDTO.getName());
+			token = token.replace("Bearer ", "");
+            System.out.println(userService.getEmailFromToken(token));
+			if (userService.checkTokenValidityAfter(token)) {
+				userDTO.setEmail(userService.getEmailFromToken(token));
+				userService.updateUserDetails(userDTO);
+				return ResponseEntity.ok().body(Map.of("message", "Profile updated successfully."));
+			} else {
+				throw new IllegalArgumentException("Something went wrong!");
+			}
+
+		} catch (Exception e) {
+			return ResponseEntity.internalServerError()
+					.body(Map.of("message", "Error updeting user: " + e.getMessage()));
+		}
+	}
 	
+	@PostMapping("/user/update-preferences")
+	public ResponseEntity<?> saveUserPreferences(@RequestBody UserPreferences preferences,
+			@RequestHeader("Authorization") String token) {
+		try {
+			token = token.replace("Bearer ", "");
+            System.out.println(userService.getEmailFromToken(token));
+			if (userService.checkTokenValidityAfter(token)) {
+				userService.savePreferences(userService.getEmailFromToken(token), preferences);
+				return ResponseEntity.ok().body(Map.of("message", "Preferences updated successfully."));
+			} else {
+				throw new IllegalArgumentException("Something went wrong!");
+			}
+
+		} catch (Exception e) {
+			return ResponseEntity.internalServerError()
+					.body(Map.of("message", "Error updeting Preferences: " + e.getMessage()));
+		}
+	}	
 	
 }
