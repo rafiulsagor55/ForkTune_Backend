@@ -11,6 +11,8 @@ import io.jsonwebtoken.security.Keys;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
+import org.springframework.web.bind.annotation.GetMapping;
+
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -151,5 +153,45 @@ public class UserController {
 					.body(Map.of("message", "Error raseting password: " + e.getMessage()));
 		}
 	}
+	
+	@GetMapping("/user/details")
+	public ResponseEntity<?> UserDetails(@RequestHeader("Authorization") String token) {
+		try {
+			token = token.replace("Bearer ", "");
+			if(userService.checkTokenValidityAfter(token)) {
+				return ResponseEntity.ok(userService.userDetails(userService.getEmailFromToken(token)));
+			}
+			else {
+				throw new IllegalArgumentException("Token is not valid! Please login and try again.");
+			}
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body(Map.of("message",e.getMessage()));
+		}
+	}
+	
+	@GetMapping("/user/preferences")
+	public ResponseEntity<?> getUserPreferences(@RequestHeader("Authorization") String token) {
+		try {
+			token = token.replace("Bearer ", "");
+			if(userService.checkTokenValidityAfter(token)) {
+				if(userService.UserPreferencesExist(userService.getEmailFromToken(token))) {
+					return ResponseEntity.ok(userService.getPreferences(userService.getEmailFromToken(token)));
+				}
+				return ResponseEntity.ok(new UserPreferences(
+			            "None",
+			            "None",
+			            "None",
+			            "None"
+			        ));
+			}
+			else {
+				throw new IllegalArgumentException("Token is not valid! Please login and try again.");
+			}
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body(Map.of("message",e.getMessage()));
+		}
+	}
+	
+	
 	
 }

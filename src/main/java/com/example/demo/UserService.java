@@ -84,11 +84,6 @@ public class UserService {
 				.signWith(Keys.hmacShaKeyFor(SECRET), SignatureAlgorithm.HS256).compact();
 	}
 
-//	public Boolean checkpassword(String email, String password) {
-//		Boolean flag=userRepository.checkPassword(email, password);
-//		if(flag)return true;
-//		else throw new IllegalArgumentException("Invalid email or password");
-//	}
 
 	public String getEmailFromToken(String jwt) {
 		if (jwt == null)
@@ -177,5 +172,30 @@ public class UserService {
 			userRepository.setNewPassword(email,password);
 		}
 	}
+	
+	public UserDTO userDetails(String email) {
+		User user=userRepository.findUserByEmail(email);
+		String reEncodedBase64=null;
+		if(user.getContentType()!=null) {
+			reEncodedBase64 = Base64.getEncoder().encodeToString(user.getProfileImageData());
+		}
+//		String reEncodedBase64 = Base64.getEncoder().encodeToString(user.getProfileImageData());
+		return UserDTO.builder().name(user.getName()).email(user.getEmail())
+				.profileImage(reEncodedBase64)
+				.dob(user.getDob()).gender(user.getGender()).build();
+	}
+	
+	
+	public void savePreferences(String email, UserPreferences preferences) {
+        userRepository.saveUserPreferences(email, preferences);
+    }
+
+    public UserPreferences getPreferences(String email) {
+        return userRepository.getUserPreferences(email);
+    }
+    
+    public boolean UserPreferencesExist(String email) {
+        return userRepository.UserPreferencesExist(email);
+    }
 
 }

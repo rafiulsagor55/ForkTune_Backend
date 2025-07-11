@@ -1,5 +1,8 @@
 package com.example.demo;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -97,7 +100,7 @@ public class UserRepository {
             user.setPassword(rs.getString("password"));
             user.setGender(rs.getString("gender"));
             user.setDob(rs.getDate("dob").toLocalDate());
-            user.setProfileImageData(rs.getBytes("profile_image_data"));
+            user.setProfileImageData(rs.getBytes("profile_image"));
             user.setContentType(rs.getString("content_type"));
             return user;
         });
@@ -120,6 +123,52 @@ public class UserRepository {
 		params.addValue("email", email);
 		params.addValue("password", password); 
 		jdbcTemplate.update(INCREMENT_COUNT_SQL, params);
+	}
+    
+    public void saveUserPreferences(String email, UserPreferences preferences) {
+        String sql = "INSERT INTO user_preferences (email, dietary_restrictions, allergies, cuisine_preferences, skill_level) " +
+                "VALUES (:email, :dietaryRestrictions, :allergies, :cuisinePreferences, :skillLevel) " +
+                "ON DUPLICATE KEY UPDATE " +
+                "dietary_restrictions = :dietaryRestrictions, " +
+                "allergies = :allergies, " +
+                "cuisine_preferences = :cuisinePreferences, " +
+                "skill_level = :skillLevel";
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("email", email);
+        params.put("dietaryRestrictions", preferences.getDietaryRestrictions());
+        params.put("allergies", preferences.getAllergies());
+        params.put("cuisinePreferences", preferences.getCuisinePreferences());
+        params.put("skillLevel", preferences.getSkillLevel());
+
+        jdbcTemplate.update(sql, params);
+    }
+
+
+    public UserPreferences getUserPreferences(String email) {
+        String sql = "SELECT * FROM user_preferences WHERE email = :email";
+        
+        Map<String, Object> params = new HashMap<>();
+        params.put("email", email);
+
+        return jdbcTemplate.queryForObject(sql, params, (rs, rowNum) -> {
+            return UserPreferences.builder()
+                    .dietaryRestrictions(rs.getString("dietary_restrictions"))
+                    .allergies(rs.getString("allergies"))
+                    .cuisinePreferences(rs.getString("cuisine_preferences"))
+                    .skillLevel(rs.getString("skill_level"))
+                    .build();
+        });
+    }
+    
+    public boolean UserPreferencesExist(String email) {
+		String CHECK_EMAIL_EXISTS = "SELECT COUNT(*) FROM user_preferences WHERE email = :email";
+		MapSqlParameterSource params = new MapSqlParameterSource();
+		params.addValue("email", email);
+
+		int count = jdbcTemplate.queryForObject(CHECK_EMAIL_EXISTS, params, Integer.class);
+
+		return count > 0;
 	}
 
 }

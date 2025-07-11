@@ -26,6 +26,7 @@ public class User {
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 class UserDTO {
 	private String email;
     private String name;
@@ -34,3 +35,23 @@ class UserDTO {
     private LocalDate dob;
     private String profileImage;
 }
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+class UserPreferences {
+
+    private String dietaryRestrictions;
+    private String allergies;
+    private String cuisinePreferences;
+    private String skillLevel;
+}
+
+
+
+
+
+
+
+
