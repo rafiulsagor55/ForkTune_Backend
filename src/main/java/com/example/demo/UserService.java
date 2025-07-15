@@ -125,6 +125,21 @@ public class UserService {
 			return false;
 		}
 	}
+	
+	public Boolean checkTokenValidityAdmin(String jwt) {
+		if (jwt == null)
+			return false;
+		try {
+			Claims claims = Jwts.parserBuilder().setSigningKey(Keys.hmacShaKeyFor(SECRET)).build().parseClaimsJws(jwt)
+					.getBody();	
+			if(claims.getSubject()!=null) {
+				return true;
+			}
+			return false;
+		} catch (Exception e) {
+			return false;
+		}
+	}
 
 	public void saveUserDetails(UserDTO userDTO) {
 		try {
@@ -235,6 +250,14 @@ public class UserService {
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Error updating user details: " + e.getMessage());
 		}
+	}
+	
+	public Boolean CheckAdminPassword(String email, String password) {
+		Boolean flag = userRepository.checkAdminPassword(email, password);
+		if (flag)
+			return true;
+		else
+			throw new IllegalArgumentException("Invalid email or password");
 	}
 
 }

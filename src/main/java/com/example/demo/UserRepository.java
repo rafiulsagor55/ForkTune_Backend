@@ -8,6 +8,8 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @Repository
 public class UserRepository {
 
@@ -126,50 +128,50 @@ public class UserRepository {
 	}
     
     public void saveUserPreferences(String email, UserPreferences preferences) {
-        String sql = "INSERT INTO user_preferences (email, dietary_restrictions, allergies, cuisine_preferences, skill_level) " +
-                "VALUES (:email, :dietaryRestrictions, :allergies, :cuisinePreferences, :skillLevel) " +
-                "ON DUPLICATE KEY UPDATE " +
-                "dietary_restrictions = :dietaryRestrictions, " +
-                "allergies = :allergies, " +
-                "cuisine_preferences = :cuisinePreferences, " +
-                "skill_level = :skillLevel";
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonPrefs = mapper.writeValueAsString(preferences);
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("email", email);
-        params.put("dietaryRestrictions", preferences.getDietaryRestrictions());
-        params.put("allergies", preferences.getAllergies());
-        params.put("cuisinePreferences", preferences.getCuisinePreferences());
-        params.put("skillLevel", preferences.getSkillLevel());
+            String sql = "INSERT INTO user_preferences (email, preferences_json) " +
+                    "VALUES (:email, :preferencesJson) " +
+                    "ON DUPLICATE KEY UPDATE preferences_json = :preferencesJson";
 
-        jdbcTemplate.update(sql, params);
+            Map<String, Object> params = new HashMap<>();
+            params.put("email", email);
+            params.put("preferencesJson", jsonPrefs);
+
+            jdbcTemplate.update(sql, params); 
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error saving preferences: " + e.getMessage());
+        }
+
     }
+        public UserPreferences getUserPreferences(String email) {
+            try {
+                String sql = "SELECT preferences_json FROM user_preferences WHERE email = :email";
+                
+                Map<String, Object> params = new HashMap<>();
+                params.put("email", email);
 
+                String jsonPrefs = jdbcTemplate.queryForObject(sql, params, String.class);
 
-    public UserPreferences getUserPreferences(String email) {
-        String sql = "SELECT * FROM user_preferences WHERE email = :email";
-        
-        Map<String, Object> params = new HashMap<>();
-        params.put("email", email);
-
-        return jdbcTemplate.queryForObject(sql, params, (rs, rowNum) -> {
-            return UserPreferences.builder()
-                    .dietaryRestrictions(rs.getString("dietary_restrictions"))
-                    .allergies(rs.getString("allergies"))
-                    .cuisinePreferences(rs.getString("cuisine_preferences"))
-                    .skillLevel(rs.getString("skill_level"))
-                    .build();
-        });
-    }
+                ObjectMapper mapper = new ObjectMapper();
+                return mapper.readValue(jsonPrefs, UserPreferences.class);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Error retrieving preferences: " + e.getMessage());
+            }
+        }
     
-    public boolean UserPreferencesExist(String email) {
-		String CHECK_EMAIL_EXISTS = "SELECT COUNT(*) FROM user_preferences WHERE email = :email";
-		MapSqlParameterSource params = new MapSqlParameterSource();
-		params.addValue("email", email);
+        public boolean UserPreferencesExist(String email) {
+            String CHECK_EMAIL_EXISTS = "SELECT COUNT(*) FROM user_preferences WHERE email = :email";
+            MapSqlParameterSource params = new MapSqlParameterSource();
+            params.addValue("email", email);
 
-		int count = jdbcTemplate.queryForObject(CHECK_EMAIL_EXISTS, params, Integer.class);
+            int count = jdbcTemplate.queryForObject(CHECK_EMAIL_EXISTS, params, Integer.class);
 
-		return count > 0;
-	}
+            return count > 0;
+        }
+
     
     public int updateUserDetails(User user) {
         String sql = "UPDATE users SET name = :name, gender = :gender, dob = :dob, profile_image = :profile_image, content_type = :content_type " +
@@ -185,5 +187,17 @@ public class UserRepository {
 
         return jdbcTemplate.update(sql, params);
     }
+    
+
+    public boolean checkAdminPassword(String email, String password) {
+		String CHECK_EMAIL_EXISTS = "SELECT COUNT(*) FROM admin WHERE email = :email AND password = :password";
+
+		MapSqlParameterSource params = new MapSqlParameterSource();
+		params.addValue("email", email);
+		params.addValue("password", password);
+
+		int count = jdbcTemplate.queryForObject(CHECK_EMAIL_EXISTS, params, Integer.class);
+		return count > 0;
+	}
 
 }

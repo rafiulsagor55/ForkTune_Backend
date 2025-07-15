@@ -20,4 +20,12 @@ public class Recipe {
     private List<String> instructions;
     private String mealType;
     private String date;
+    private Map<String, Object> preferences;
+    private int flag;
+}
+
+@Data
+class RecipePreferenceRequest {
+    private String recipeId;
+    private Map<String, Object> preferences;
 }

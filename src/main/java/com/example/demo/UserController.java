@@ -9,6 +9,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
 import java.util.Base64;
+import java.util.*;
 import java.util.Date;
 import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -103,7 +104,7 @@ public class UserController {
 
 
 			if (email != null && !email.isEmpty() && userService.checkpassword(email, password)) {
-				return ResponseEntity.ok(Map.of("message",jwt));
+				return ResponseEntity.ok(Map.of("token",jwt));
 			} else {
 				return ResponseEntity.badRequest().body(Map.of("message", "Invalid email or password"));
 			}
@@ -171,26 +172,30 @@ public class UserController {
 	
 	@GetMapping("/user/preferences")
 	public ResponseEntity<?> getUserPreferences(@RequestHeader("Authorization") String token) {
-		try {
-			token = token.replace("Bearer ", "");
-			if(userService.checkTokenValidityAfter(token)) {
-				if(userService.UserPreferencesExist(userService.getEmailFromToken(token))) {
-					return ResponseEntity.ok(userService.getPreferences(userService.getEmailFromToken(token)));
-				}
-				return ResponseEntity.ok(new UserPreferences(
-			            "None",
-			            "None",
-			            "None",
-			            "Beginner"
-			        ));
-			}
-			else {
-				throw new IllegalArgumentException("Token is not valid! Please login and try again.");
-			}
-		} catch (Exception e) {
-			return ResponseEntity.badRequest().body(Map.of("message",e.getMessage()));
-		}
+	    try {
+	        token = token.replace("Bearer ", "");
+	        
+	        if(userService.checkTokenValidityAfter(token)) {
+	            
+	            if(userService.UserPreferencesExist(userService.getEmailFromToken(token))) {
+	                
+	                return ResponseEntity.ok(userService.getPreferences(userService.getEmailFromToken(token)));
+	            }
+
+	            return ResponseEntity.ok(new UserPreferences(
+	                List.of(),
+	                List.of(),
+	                List.of(),
+	                false
+	            ));
+	        } else {
+	            throw new IllegalArgumentException("Token is not valid! Please login and try again.");
+	        }
+	    } catch (Exception e) {
+	        return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+	    }
 	}
+
 	
 	@PostMapping("/user/update-details")
 	public ResponseEntity<?> updateUserDetails(@RequestBody UserDTO userDTO,
@@ -230,6 +235,29 @@ public class UserController {
 			return ResponseEntity.internalServerError()
 					.body(Map.of("message", "Error updeting Preferences: " + e.getMessage()));
 		}
-	}	
+	}
+	
+	@PostMapping("/admin/login")
+	public ResponseEntity<?> adminLogin(@RequestBody Map<String, String> payload) {
+		try {
+			String email = payload.get("email");
+			String password=payload.get("password");
+			long expirationMillis = 7 * 24 * 60 * 60 * 1000L;
+			Date now = new Date();
+			Date expiryDate = new Date(now.getTime() + expirationMillis);
+			
+			String jwt = Jwts.builder().setSubject(email).setExpiration(expiryDate)
+					.signWith(Keys.hmacShaKeyFor(SECRET), SignatureAlgorithm.HS256).compact();
+
+
+			if (email != null && !email.isEmpty() && userService.CheckAdminPassword(email, password)) {
+				return ResponseEntity.ok(Map.of("token",jwt));
+			} else {
+				return ResponseEntity.badRequest().body(Map.of("error", "Invalid email or password"));
+			}
+		} catch (Exception e) {
+			return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+		}
+	}
 	
 }

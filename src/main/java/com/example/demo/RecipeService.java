@@ -35,15 +35,39 @@ public class RecipeService {
     }
 
     public List<Recipe> getRecipeById(String email) {
-        return recipeRepository.findById(email);
+    	List<Recipe>recipes=recipeRepository.findById(email);
+    	System.out.println(recipes.get(2).getPreferences());
+        return recipes;
     }
     
     public boolean DeleteRecipe(String recipeId) {
        return recipeRepository.deleteRecipe(recipeId);
     }
     
+    public boolean publishRecipe(String recipeId,int flag) {
+        return recipeRepository.PublishRecipe(recipeId,flag);
+     }
+    
     public boolean UpdateRecipe(String recipeId, Recipe recipe) {
     	return recipeRepository.updaterecipe(recipeId, recipe);
+    }
+    
+    public void savePreferences(RecipePreferenceRequest request) {
+        recipeRepository.savePreferences(request.getRecipeId(), request.getPreferences());
+    }
+    
+    public boolean savedRecipe(String email,String recipeId) {
+    	return recipeRepository.savedrecipe(email,recipeId);
+    }
+    public boolean DoesSavedItemExist(String email,String id) {
+    	return recipeRepository.doesSavedItemExist(email, id);
+    }
+    public void deletesavedRecipe(String email, String id) {
+    	recipeRepository.DeletesavedRecipee(email,id);
+    }
+    
+    public List<Recipe> getSavedRecipeById(String email) {
+        return recipeRepository.findSavedRecipesByEmail(email);
     }
 
 }

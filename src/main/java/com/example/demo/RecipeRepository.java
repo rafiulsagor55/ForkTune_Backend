@@ -72,12 +72,15 @@ public class RecipeRepository {
         List<Recipe> result = jdbcTemplate.query(sql, params, this::mapRowToRecipe);
         return result.isEmpty() ? null : result;
     }
-
+    
+   
     private Recipe mapRowToRecipe(ResultSet rs, int rowNum) {
         try {
             ObjectMapper mapper = new ObjectMapper();
             Recipe recipe = new Recipe();
+
             recipe.setId(rs.getString("id"));
+            recipe.setFlag(rs.getInt("flag"));
             recipe.setTitle(rs.getString("title"));
             recipe.setImageId(rs.getString("image_id"));
             recipe.setDescription(rs.getString("description"));
@@ -90,17 +93,30 @@ public class RecipeRepository {
             recipe.setMealType(rs.getString("meal_type"));
             recipe.setDate(rs.getString("date"));
 
+            // Mapping ingredients
             recipe.setIngredients(mapper.readValue(rs.getString("ingredients"),
                     new TypeReference<List<Map<String, String>>>() {}));
 
+            // Mapping instructions
             recipe.setInstructions(mapper.readValue(rs.getString("instructions"),
                     new TypeReference<List<String>>() {}));
+
+            // Mapping preferences (check if it's null or empty)
+            String preferencesJson = rs.getString("preferences");
+            if (preferencesJson != null && !preferencesJson.isEmpty()) {
+                recipe.setPreferences(mapper.readValue(preferencesJson,
+                        new TypeReference<Map<String, Object>>() {}));
+            } else {
+                recipe.setPreferences(new HashMap<>());  // Set to an empty map if preferences is null or empty
+            }
 
             return recipe;
         } catch (Exception e) {
             throw new RuntimeException("Error mapping recipe", e);
         }
     }
+
+
     
     public boolean deleteRecipe(String recipeId) {
         String checkSql = "SELECT COUNT(*) FROM recipes WHERE id = :recipeId";
@@ -148,6 +164,77 @@ public class RecipeRepository {
 
         return rowsUpdated > 0;
     }
+    
+    public void savePreferences(String recipeId, Map<String, Object> preferences) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonPrefs = mapper.writeValueAsString(preferences); // convert Map to JSON string
+
+            String sql = "UPDATE recipes SET preferences = :preferences WHERE id = :id";
+            MapSqlParameterSource params = new MapSqlParameterSource();
+            params.addValue("id", recipeId);
+            params.addValue("preferences", jsonPrefs);
+
+            jdbcTemplate.update(sql, params);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error saving preferences to DB");
+        }
+    }
+    
+    public Boolean PublishRecipe(String id, int flag) {
+    	String sql = "UPDATE recipes SET flag = :flag "+
+                "WHERE id = :id";
+    	Map<String, Object> params = new HashMap<>();
+    	params.put("id", id);
+    	params.put("flag", flag);
+    	System.out.println("Id: "+id);
+    	int rowsUpdated = jdbcTemplate.update(sql, params);
+        return rowsUpdated > 0;
+    	
+    }
+    
+    public Boolean savedrecipe(String email, String id) {
+    	String sql = "INSERT INTO saved (email, id) VALUES (:email, :id)";
+        Map<String, Object> params = new HashMap<>();
+        params.put("email", email);
+        params.put("id", id);
+    	int rowsUpdated = jdbcTemplate.update(sql, params);
+        return rowsUpdated > 0;
+    	
+    }
+    
+    public boolean doesSavedItemExist(String email,String id) {
+		String CHECK_EMAIL_EXISTS = "SELECT COUNT(*) FROM saved WHERE email = :email AND id = :id";
+		MapSqlParameterSource params = new MapSqlParameterSource();
+		params.addValue("email", email);
+		params.addValue("id", id);
+		int count = jdbcTemplate.queryForObject(CHECK_EMAIL_EXISTS, params, Integer.class);
+
+		return count > 0;
+	}
+    
+    public void DeletesavedRecipee(String email,String id) {
+    	String checkSql = "DELETE FROM saved WHERE id = :id AND email = :email";
+        Map<String, Object> params = new HashMap<>();
+        params.put("id", id);
+        params.put("email", email);
+        jdbcTemplate.update(checkSql, params);
+    }
+    
+    public List<Recipe> findSavedRecipesByEmail(String email) {
+        String sql = "SELECT id FROM saved WHERE email = :email";
+        Map<String, Object> params = Map.of("email", email);
+        List<String> savedRecipeIds = jdbcTemplate.queryForList(sql, params, String.class);
+
+        if (savedRecipeIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        String recipeSql = "SELECT * FROM recipes WHERE id IN (:ids)";
+        Map<String, Object> recipeParams = Map.of("ids", savedRecipeIds);
+        return jdbcTemplate.query(recipeSql, recipeParams, this::mapRowToRecipe);
+    }
+
 
 
 }

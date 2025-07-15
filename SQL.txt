@@ -1,0 +1,107 @@
+-- create database ForkTune;
+use ForkTune;
+
+
+-- CREATE TABLE users (
+--     id VARCHAR(100) PRIMARY KEY,
+--     name VARCHAR(100) NOT NULL,
+--     email VARCHAR(100) UNIQUE NOT NULL,
+--     password VARCHAR(100) NOT NULL,
+--     gender VARCHAR(20),
+--     dob DATE,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- CREATE TABLE users (
+--     email VARCHAR(255) PRIMARY KEY,
+--     name VARCHAR(255) NOT NULL,
+--     password VARCHAR(255) NOT NULL,
+--     gender VARCHAR(50),
+--     dob DATE,
+--     profile_image LONGBLOB,
+--     content_type VARCHAR(100),
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- CREATE TABLE codes (
+--     email VARCHAR(255),
+--     code VARCHAR(255) NOT NULL,
+--     count INT DEFAULT 0,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     PRIMARY KEY (email)
+-- );
+
+-- CREATE TABLE user_preferences (
+--     email VARCHAR(255) PRIMARY KEY,
+--     dietary_restrictions VARCHAR(255) DEFAULT 'None',
+--     allergies VARCHAR(255) DEFAULT 'None',
+--     cuisine_preferences VARCHAR(255) DEFAULT 'None',
+--     skill_level VARCHAR(255) DEFAULT 'None',
+--     FOREIGN KEY (email) REFERENCES users(email) ON DELETE CASCADE
+-- );
+
+-- CREATE TABLE recipe_images (
+--     image_id VARCHAR(100) PRIMARY KEY,
+--     email VARCHAR(255),
+--     image_data LONGBLOB,
+--     FOREIGN KEY (email) REFERENCES users(email) ON DELETE CASCADE
+-- );
+
+-- CREATE TABLE recipes (
+--     id INT AUTO_INCREMENT PRIMARY KEY,
+--     email VARCHAR(255),
+--     title VARCHAR(255),
+--     image_id VARCHAR(100),
+--     description TEXT,
+--     prep_time INT,
+--     cook_time INT,
+--     calories VARCHAR(50),
+--     protein VARCHAR(50),
+--     fat VARCHAR(50),
+--     carbs VARCHAR(50),
+--     ingredients JSON,
+--     instructions JSON,
+--     meal_type VARCHAR(50),
+--     date VARCHAR(50),
+--     FOREIGN KEY (image_id) REFERENCES recipe_images(image_id) ON DELETE CASCADE,
+--     FOREIGN KEY (email) REFERENCES users(email) ON DELETE CASCADE
+-- );
+-- ALTER TABLE recipes ADD COLUMN preferences JSON;
+-- alter table recipes add column flag int default 0;
+
+
+-- select * from users;
+-- delete from users where email="rafiulsagor55@gmail.com";
+-- delete from users where email="sagor@gmail.com";
+-- drop table users;
+-- select* from recipes;
+-- select*from recipe_images;
+
+-- drop table user_preferences;
+-- drop table recipe_images;
+
+-- CREATE TABLE user_preferences (
+--     email VARCHAR(255) PRIMARY KEY,
+--     preferences_json JSON
+-- );
+
+
+-- select * from user_preferences;
+
+-- CREATE TABLE admin (
+--  email VARCHAR(255)  PRIMARY KEY,
+--  password VARCHAR(255) NOT NULL
+-- );
+
+-- CREATE TABLE saved (
+--   saved_id INT AUTO_INCREMENT PRIMARY KEY,
+--   email VARCHAR(255),
+--   id VARCHAR(255),
+--   FOREIGN KEY (email) REFERENCES users(email) ON DELETE CASCADE
+-- );
+
+
+-- INSERT INTO admin (email, password)
+-- VALUES ('rafeulsagor@gmail.com', '123456');
+
+select * from saved;

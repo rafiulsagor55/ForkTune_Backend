@@ -2,6 +2,7 @@ package com.example.demo;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,10 +43,10 @@ class UserDTO {
 @Builder
 class UserPreferences {
 
-    private String dietaryRestrictions;
-    private String allergies;
-    private String cuisinePreferences;
-    private String skillLevel;
+	private List<String> dietaryRestrictions;
+    private List<String> allergies;
+    private List<String> cuisinePreferences;
+    private Boolean diabeticFriendly;
 }
 
 

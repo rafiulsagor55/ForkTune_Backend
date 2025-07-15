@@ -12,108 +12,246 @@ import java.util.Map;
 @RequestMapping("/recipes")
 public class RecipeController {
 
-    @Autowired
-    private RecipeService recipeService;
-    @Autowired
-    private UserService userService;
+	@Autowired
+	private RecipeService recipeService;
+	@Autowired
+	private UserService userService;
 
-    @PostMapping("/upload-image")
-    public ResponseEntity<?> uploadImage(@RequestParam("image") MultipartFile file,
-            @RequestHeader("Authorization") String token) {
-        try {
-            token = token.replace("Bearer ", "");
-            if (userService.checkTokenValidityAfter(token)) {
-                String imageId = recipeService.storeImageInDB(file, userService.getEmailFromToken(token));
-                return ResponseEntity.ok(Map.of("imageId", imageId));
-            }
-            throw new IllegalArgumentException("Token is not valid! Please login and try again.");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Image upload failed");
-        }
-    }
+	@PostMapping("/upload-image")
+	public ResponseEntity<?> uploadImage(@RequestParam("image") MultipartFile file,
+			@RequestHeader("Authorization") String token) {
+		try {
+			token = token.replace("Bearer ", "");
+			if (userService.checkTokenValidityAfter(token)) {
+				String imageId = recipeService.storeImageInDB(file, userService.getEmailFromToken(token));
+				return ResponseEntity.ok(Map.of("imageId", imageId));
+			}
+			throw new IllegalArgumentException("Token is not valid! Please login and try again.");
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Image upload failed");
+		}
+	}
 
-    @PostMapping("/saveRecipes")
-    public ResponseEntity<?> saveRecipe(@RequestBody Recipe recipe, @RequestHeader("Authorization") String token) {
-        try {
-            token = token.replace("Bearer ", "");
-            if (userService.checkTokenValidityAfter(token)) {
-                recipeService.saveRecipe(recipe, userService.getEmailFromToken(token));
-                return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Recipe saved successfully"));
-            }
-            throw new IllegalArgumentException("Token is not valid! Please login and try again.");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to save recipe: " + e.getMessage());
-        }
-    }
+	@PostMapping("/saveRecipes")
+	public ResponseEntity<?> saveRecipe(@RequestBody Recipe recipe, @RequestHeader("Authorization") String token) {
+		try {
+			token = token.replace("Bearer ", "");
+			if (userService.checkTokenValidityAfter(token)) {
+				recipeService.saveRecipe(recipe, userService.getEmailFromToken(token));
+				return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Recipe saved successfully"));
+			}
+			throw new IllegalArgumentException("Token is not valid! Please login and try again.");
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Failed to save recipe: " + e.getMessage());
+		}
+	}
 
-    @GetMapping("/image/{imageId}")
-    public ResponseEntity<byte[]> getImage(@PathVariable String imageId) {
-        byte[] imageData = recipeService.getImageById(imageId);
-        if (imageData != null) {
-            return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(imageData);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
+	@GetMapping("/image/{imageId}")
+	public ResponseEntity<byte[]> getImage(@PathVariable String imageId) {
+		byte[] imageData = recipeService.getImageById(imageId);
+		if (imageData != null) {
+			return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(imageData);
+		} else {
+			return ResponseEntity.notFound().build();
+		}
+	}
 
-    @GetMapping
-    public ResponseEntity<List<Recipe>> getAllRecipes() {
-        return ResponseEntity.ok(recipeService.getAllRecipes());
-    }
+	@GetMapping("/admin")
+	public ResponseEntity<List<Recipe>> getAllRecipes() {
+		return ResponseEntity.ok(recipeService.getAllRecipes());
+	}
 
-    @GetMapping("/user")
-    public ResponseEntity<?> getRecipeById(@RequestHeader("Authorization") String token) {
-        try {
-            token = token.replace("Bearer ", "");
-            if (userService.checkTokenValidityAfter(token)) {
-                return ResponseEntity.ok(recipeService.getRecipeById(userService.getEmailFromToken(token)));
-            }
-            throw new IllegalArgumentException("Token is not valid! Please login and try again.");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Something went wrong!");
-        }
-    }
+	@GetMapping("/user")
+	public ResponseEntity<?> getRecipeById(@RequestHeader("Authorization") String token) {
+		try {
+			token = token.replace("Bearer ", "");
+			if (userService.checkTokenValidityAfter(token)) {
+				return ResponseEntity.ok(recipeService.getRecipeById(userService.getEmailFromToken(token)));
+			}
+			throw new IllegalArgumentException("Token is not valid! Please login and try again.");
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Something went wrong!");
+		}
+	}
 
-    @PostMapping("/delete")
-    public ResponseEntity<?> deleteRecipe(@RequestBody Map<String, String>map, @RequestHeader("Authorization") String token) {
-        try {
-            token = token.replace("Bearer ", "");
-            if (userService.checkTokenValidityAfter(token)) {
-                boolean isDeleted = recipeService.DeleteRecipe(map.get("id"));
-                if (isDeleted) {
-                    return ResponseEntity.ok("Recipe deleted successfully");
-                } else {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Recipe not found");
-                }
-            } else {
-                throw new IllegalArgumentException("Token is not valid! Please login and try again.");
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Something went wrong!");
-        }
-    }
+	@PostMapping("/delete")
+	public ResponseEntity<?> deleteRecipe(@RequestBody Map<String, String> map,
+			@RequestHeader("Authorization") String token) {
+		try {
+			token = token.replace("Bearer ", "");
+			if (userService.checkTokenValidityAfter(token)) {
+				boolean isDeleted = recipeService.DeleteRecipe(map.get("id"));
+				if (isDeleted) {
+					return ResponseEntity.ok("Recipe deleted successfully");
+				} else {
+					return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Recipe not found");
+				}
+			} else {
+				throw new IllegalArgumentException("Token is not valid! Please login and try again.");
+			}
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Something went wrong!");
+		}
+	}
 
-    @PostMapping("/edit")
-    public ResponseEntity<?> updateRecipe(
-        @RequestBody Recipe recipe,
-        @RequestHeader("Authorization") String token) {
-    	System.out.println("Id: "+recipe.getId());
+	@PostMapping("/edit")
+	public ResponseEntity<?> updateRecipe(@RequestBody Recipe recipe, @RequestHeader("Authorization") String token) {
+		System.out.println("Id: " + recipe.getId());
 
-        try {
-        	
-            token = token.replace("Bearer ", "");
-            if (userService.checkTokenValidityAfter(token)) {
-                boolean isUpdated = recipeService.UpdateRecipe(recipe.getId(), recipe);
-                if (isUpdated) {
-                    return ResponseEntity.ok("Recipe updated successfully");
-                } else {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Recipe not found");
-                }
-            } else {
-                throw new IllegalArgumentException("Token is not valid! Please login and try again.");
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
-        }
-    }
+		try {
+
+			token = token.replace("Bearer ", "");
+			if (userService.checkTokenValidityAfter(token)) {
+				boolean isUpdated = recipeService.UpdateRecipe(recipe.getId(), recipe);
+				if (isUpdated) {
+					return ResponseEntity.ok("Recipe updated successfully");
+				} else {
+					return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Recipe not found");
+				}
+			} else {
+				throw new IllegalArgumentException("Token is not valid! Please login and try again.");
+			}
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+		}
+	}
+
+	@PostMapping("/add-preferences")
+	public ResponseEntity<String> addPreferences(@RequestBody RecipePreferenceRequest request,
+			@RequestHeader("Authorization") String token) {
+		try {
+
+			token = token.replace("Bearer ", "");
+			if (userService.checkTokenValidityAfter(token)) {
+				recipeService.savePreferences(request);
+				return ResponseEntity.ok("Preferences saved successfully.");
+			} else {
+				throw new IllegalArgumentException("Token is not valid! Please login and try again.");
+			}
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+		}
+
+	}
+
+	@PostMapping("/admin/delete")
+	public ResponseEntity<?> deleteRecipeAdmin(@RequestBody Map<String, String> map,
+			@RequestHeader("Authorization") String token) {
+		try {
+			token = token.replace("Bearer ", "");
+			if (userService.checkTokenValidityAdmin(token)) {
+				boolean isDeleted = recipeService.DeleteRecipe(map.get("id"));
+				if (isDeleted) {
+					return ResponseEntity.ok("Recipe deleted successfully");
+				} else {
+					return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Recipe not found");
+				}
+			} else {
+				throw new IllegalArgumentException("Token is not valid! Please login and try again.");
+			}
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Something went wrong!");
+		}
+	}
+
+	@PostMapping("/admin/publishORunpublish")
+	public ResponseEntity<?> PublishorUnpublishRecipeAdmin(@RequestBody Map<String, String> map,
+			@RequestHeader("Authorization") String token) {
+		try {
+			token = token.replace("Bearer ", "");
+			if (userService.checkTokenValidityAdmin(token)) {
+				System.out.println("Id: " + map.get("id"));
+				boolean isEdited = recipeService.publishRecipe(map.get("id"), Integer.parseInt(map.get("flag")));
+				if (isEdited && Integer.parseInt(map.get("flag")) == 1) {
+					return ResponseEntity.ok("Recipe published successfully");
+				} else if (isEdited && Integer.parseInt(map.get("flag")) == 0) {
+					return ResponseEntity.ok("Recipe unpublished successfully");
+				} else {
+					return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Recipe not found");
+				}
+			} else {
+				throw new IllegalArgumentException("Token is not valid! Please login and try again.");
+			}
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Something went wrong!");
+		}
+	}
+
+	@PostMapping("/toggle-save")
+	public ResponseEntity<?> savedRecipe(@RequestBody Map<String, String> map,
+			@RequestHeader("Authorization") String token) {
+		try {
+			token = token.replace("Bearer ", "");
+			if (userService.checkTokenValidityAfter(token)) {
+				if (!recipeService.DoesSavedItemExist(userService.getEmailFromToken(token), map.get("id"))) {
+					boolean isDeleted = recipeService.savedRecipe(userService.getEmailFromToken(token), map.get("id"));
+					if (isDeleted) {
+						return ResponseEntity.ok("Recipe saved successfully");
+					} else {
+						return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Recipe not found");
+					}
+				} else {
+					recipeService.deletesavedRecipe(userService.getEmailFromToken(token), map.get("id"));
+					return ResponseEntity.ok("Removed from saved.");
+				}
+
+			} else {
+				throw new IllegalArgumentException("Token is not valid! Please login and try again.");
+			}
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Something went wrong!");
+		}
+	}
+
+	@GetMapping("/is-saved/{recipeId}")
+	public ResponseEntity<?> isRecipeSaved(@PathVariable String recipeId,
+			@RequestHeader("Authorization") String token) {
+		try {
+			token = token.replace("Bearer ", "");
+			if (!userService.checkTokenValidityAfter(token)) {
+				throw new IllegalArgumentException("Token is not valid! Please login and try again.");
+			}
+			String email = userService.getEmailFromToken(token);
+			boolean isSaved = recipeService.DoesSavedItemExist(email, recipeId);
+			return ResponseEntity.ok(Map.of("isSaved", isSaved));
+
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Something went wrong!");
+		}
+	}
+
+	@PostMapping("/toggle-save/remove")
+	public ResponseEntity<?> RemovesavedRecipe(@RequestBody Map<String, String> map,
+			@RequestHeader("Authorization") String token) {
+		try {
+			token = token.replace("Bearer ", "");
+			if (userService.checkTokenValidityAfter(token)) {
+				if (!recipeService.DoesSavedItemExist(userService.getEmailFromToken(token), map.get("id"))) {
+					return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Recipe not found");
+				} else {
+					recipeService.deletesavedRecipe(userService.getEmailFromToken(token), map.get("id"));
+					return ResponseEntity.ok("Removed from saved.");
+				}
+
+			} else {
+				throw new IllegalArgumentException("Token is not valid! Please login and try again.");
+			}
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Something went wrong!");
+		}
+	}
+	
+	@GetMapping("/user/saved")
+	public ResponseEntity<?> getSavedRecipeByEmail(@RequestHeader("Authorization") String token) {
+		try {
+			token = token.replace("Bearer ", "");
+			if (userService.checkTokenValidityAfter(token)) {
+				return ResponseEntity.ok(recipeService.getSavedRecipeById(userService.getEmailFromToken(token)));
+			}
+			throw new IllegalArgumentException("Token is not valid! Please login and try again.");
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Something went wrong!");
+		}
+	}
+
 }
