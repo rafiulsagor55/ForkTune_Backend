@@ -13,198 +13,195 @@ import java.util.*;
 @Repository
 public class RecipeRepository {
 
-    @Autowired
-    private NamedParameterJdbcTemplate jdbcTemplate;
+	@Autowired
+	private NamedParameterJdbcTemplate jdbcTemplate;
 
-    public void saveImage(String imageId, byte[] data,String email) {
-        String sql = "INSERT INTO recipe_images (image_id, email, image_data) VALUES (:imageId, :email, :imageData)";
-        Map<String, Object> params = new HashMap<>();
-        params.put("imageId", imageId);
-        params.put("email", email);
-        params.put("imageData", data);
-        jdbcTemplate.update(sql, params);
-    }
+	public void saveImage(String imageId, byte[] data, String email) {
+		String sql = "INSERT INTO recipe_images (image_id, email, image_data) VALUES (:imageId, :email, :imageData)";
+		Map<String, Object> params = new HashMap<>();
+		params.put("imageId", imageId);
+		params.put("email", email);
+		params.put("imageData", data);
+		jdbcTemplate.update(sql, params);
+	}
 
-    public byte[] getImage(String imageId) {
-        String sql = "SELECT image_data FROM recipe_images WHERE image_id = :imageId";
-        Map<String, Object> params = Map.of("imageId", imageId);
-        List<byte[]> results = jdbcTemplate.query(sql, params, (rs, rowNum) -> rs.getBytes("image_data"));
-        return results.isEmpty() ? null : results.get(0);
-    }
+	public byte[] getImage(String imageId) {
+		String sql = "SELECT image_data FROM recipe_images WHERE image_id = :imageId";
+		Map<String, Object> params = Map.of("imageId", imageId);
+		List<byte[]> results = jdbcTemplate.query(sql, params, (rs, rowNum) -> rs.getBytes("image_data"));
+		return results.isEmpty() ? null : results.get(0);
+	}
 
-    public void save(Recipe recipe,String email) {
-        String sql = "INSERT INTO recipes (title, email, image_id, description, prep_time, cook_time, calories, protein, fat, carbs, ingredients, instructions, meal_type, date) " +
-                     "VALUES (:title, :email, :imageId, :description, :prepTime, :cookTime, :calories, :protein, :fat, :carbs, :ingredients, :instructions, :mealType, :date)";
+	public void save(Recipe recipe, String email) {
+		String sql = "INSERT INTO recipes (title, email, image_id, description, prep_time, cook_time, calories, protein, fat, carbs, ingredients, instructions, meal_type, date) "
+				+ "VALUES (:title, :email, :imageId, :description, :prepTime, :cookTime, :calories, :protein, :fat, :carbs, :ingredients, :instructions, :mealType, :date)";
 
-        Map<String, Object> params = new HashMap<>();
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            params.put("title", recipe.getTitle());
-            params.put("imageId", recipe.getImageId());
-            params.put("description", recipe.getDescription());
-            params.put("prepTime", recipe.getPrepTime());
-            params.put("cookTime", recipe.getCookTime());
-            params.put("calories", recipe.getCalories());
-            params.put("protein", recipe.getProtein());
-            params.put("fat", recipe.getFat());
-            params.put("carbs", recipe.getCarbs());
-            params.put("ingredients", mapper.writeValueAsString(recipe.getIngredients()));
-            params.put("instructions", mapper.writeValueAsString(recipe.getInstructions()));
-            params.put("mealType", recipe.getMealType());
-            params.put("date", recipe.getDate());
-            params.put("email", email);
+		Map<String, Object> params = new HashMap<>();
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			params.put("title", recipe.getTitle());
+			params.put("imageId", recipe.getImageId());
+			params.put("description", recipe.getDescription());
+			params.put("prepTime", recipe.getPrepTime());
+			params.put("cookTime", recipe.getCookTime());
+			params.put("calories", recipe.getCalories());
+			params.put("protein", recipe.getProtein());
+			params.put("fat", recipe.getFat());
+			params.put("carbs", recipe.getCarbs());
+			params.put("ingredients", mapper.writeValueAsString(recipe.getIngredients()));
+			params.put("instructions", mapper.writeValueAsString(recipe.getInstructions()));
+			params.put("mealType", recipe.getMealType());
+			params.put("date", recipe.getDate());
+			params.put("email", email);
 
-            jdbcTemplate.update(sql, params);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize ingredients/instructions", e);
-        }
-    }
-    
-    
-    public List<Recipe> findAll() {
-        String sql = "SELECT * FROM recipes";
-        return jdbcTemplate.query(sql, new MapSqlParameterSource(), this::mapRowToRecipe);
-    }
+			jdbcTemplate.update(sql, params);
+		} catch (JsonProcessingException e) {
+			throw new RuntimeException("Failed to serialize ingredients/instructions", e);
+		}
+	}
 
-    public List<Recipe>findById(String email) {
-        String sql = "SELECT * FROM recipes WHERE email = :email";
-        Map<String, Object> params = Map.of("email", email);
-        List<Recipe> result = jdbcTemplate.query(sql, params, this::mapRowToRecipe);
-        return result.isEmpty() ? null : result;
-    }
-    
-   
-    private Recipe mapRowToRecipe(ResultSet rs, int rowNum) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            Recipe recipe = new Recipe();
+	public List<Recipe> findAll() {
+		String sql = "SELECT * FROM recipes";
+		return jdbcTemplate.query(sql, new MapSqlParameterSource(), this::mapRowToRecipe);
+	}
 
-            recipe.setId(rs.getString("id"));
-            recipe.setFlag(rs.getInt("flag"));
-            recipe.setTitle(rs.getString("title"));
-            recipe.setImageId(rs.getString("image_id"));
-            recipe.setDescription(rs.getString("description"));
-            recipe.setPrepTime(rs.getInt("prep_time"));
-            recipe.setCookTime(rs.getInt("cook_time"));
-            recipe.setCalories(rs.getString("calories"));
-            recipe.setProtein(rs.getString("protein"));
-            recipe.setFat(rs.getString("fat"));
-            recipe.setCarbs(rs.getString("carbs"));
-            recipe.setMealType(rs.getString("meal_type"));
-            recipe.setDate(rs.getString("date"));
+	public List<Recipe> findAllPublishedRecipe() {
+		String sql = "SELECT * FROM recipes where flag=1";
+		return jdbcTemplate.query(sql, new MapSqlParameterSource(), this::mapRowToRecipe);
+	}
 
-            // Mapping ingredients
-            recipe.setIngredients(mapper.readValue(rs.getString("ingredients"),
-                    new TypeReference<List<Map<String, String>>>() {}));
+	public List<Recipe> findById(String email) {
+		String sql = "SELECT * FROM recipes WHERE email = :email";
+		Map<String, Object> params = Map.of("email", email);
+		List<Recipe> result = jdbcTemplate.query(sql, params, this::mapRowToRecipe);
+		return result.isEmpty() ? null : result;
+	}
 
-            // Mapping instructions
-            recipe.setInstructions(mapper.readValue(rs.getString("instructions"),
-                    new TypeReference<List<String>>() {}));
+	private Recipe mapRowToRecipe(ResultSet rs, int rowNum) {
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			Recipe recipe = new Recipe();
 
-            // Mapping preferences (check if it's null or empty)
-            String preferencesJson = rs.getString("preferences");
-            if (preferencesJson != null && !preferencesJson.isEmpty()) {
-                recipe.setPreferences(mapper.readValue(preferencesJson,
-                        new TypeReference<Map<String, Object>>() {}));
-            } else {
-                recipe.setPreferences(new HashMap<>());  // Set to an empty map if preferences is null or empty
-            }
+			recipe.setId(rs.getString("id"));
+			recipe.setFlag(rs.getInt("flag"));
+			recipe.setTitle(rs.getString("title"));
+			recipe.setImageId(rs.getString("image_id"));
+			recipe.setDescription(rs.getString("description"));
+			recipe.setPrepTime(rs.getInt("prep_time"));
+			recipe.setCookTime(rs.getInt("cook_time"));
+			recipe.setCalories(rs.getString("calories"));
+			recipe.setProtein(rs.getString("protein"));
+			recipe.setFat(rs.getString("fat"));
+			recipe.setCarbs(rs.getString("carbs"));
+			recipe.setMealType(rs.getString("meal_type"));
+			recipe.setDate(rs.getString("date"));
+			recipe.setRating(rs.getDouble("rating"));
 
-            return recipe;
-        } catch (Exception e) {
-            throw new RuntimeException("Error mapping recipe", e);
-        }
-    }
+			recipe.setIngredients(
+					mapper.readValue(rs.getString("ingredients"), new TypeReference<List<Map<String, String>>>() {
+					}));
 
+			recipe.setInstructions(mapper.readValue(rs.getString("instructions"), new TypeReference<List<String>>() {
+			}));
 
-    
-    public boolean deleteRecipe(String recipeId) {
-        String checkSql = "SELECT COUNT(*) FROM recipes WHERE id = :recipeId";
-        Map<String, Object> params = new HashMap<>();
-        params.put("recipeId", recipeId);
-        Integer count = jdbcTemplate.queryForObject(checkSql, params, Integer.class);
+			String preferencesJson = rs.getString("preferences");
+			if (preferencesJson != null && !preferencesJson.isEmpty()) {
+				recipe.setPreferences(mapper.readValue(preferencesJson, new TypeReference<Map<String, Object>>() {
+				}));
+			} else {
+				recipe.setPreferences(new HashMap<>()); 
+			}
 
-        if (count != null && count > 0) {
-            String deleteSql = "DELETE FROM recipes WHERE id = :recipeId";
-            jdbcTemplate.update(deleteSql, params);
-            return true;
-        }
-        return false;
-    }
-    
-    public boolean updaterecipe(String recipeId, Recipe recipe) {
-        String sql = "UPDATE recipes SET title = :title, description = :description, meal_type = :mealType, " +
-                     "prep_time = :prepTime, cook_time = :cookTime, calories = :calories, protein = :protein, " +
-                     "fat = :fat, carbs = :carbs, ingredients = :ingredients, instructions = :instructions " +
-                     "WHERE id = :recipeId";
+			return recipe;
+		} catch (Exception e) {
+			throw new RuntimeException("Error mapping recipe", e);
+		}
+	}
 
-       
+	public boolean deleteRecipe(String recipeId) {
+		String checkSql = "SELECT COUNT(*) FROM recipes WHERE id = :recipeId";
+		Map<String, Object> params = new HashMap<>();
+		params.put("recipeId", recipeId);
+		Integer count = jdbcTemplate.queryForObject(checkSql, params, Integer.class);
 
-        Map<String, Object> params = new HashMap<>();
-        
-        try {
-        	ObjectMapper mapper = new ObjectMapper();
-            params.put("title", recipe.getTitle());
-            params.put("description", recipe.getDescription());
-            params.put("mealType", recipe.getMealType());
-            params.put("prepTime", recipe.getPrepTime());
-            params.put("cookTime", recipe.getCookTime());
-            params.put("calories", recipe.getCalories());
-            params.put("protein", recipe.getProtein());
-            params.put("fat", recipe.getFat());
-            params.put("carbs", recipe.getCarbs());
-            params.put("ingredients", mapper.writeValueAsString(recipe.getIngredients()));
-            params.put("instructions", mapper.writeValueAsString(recipe.getInstructions()));
-            params.put("recipeId", recipeId);
+		if (count != null && count > 0) {
+			String deleteSql = "DELETE FROM recipes WHERE id = :recipeId";
+			jdbcTemplate.update(deleteSql, params);
+			return true;
+		}
+		return false;
+	}
+
+	public boolean updaterecipe(String recipeId, Recipe recipe) {
+		String sql = "UPDATE recipes SET title = :title, description = :description, meal_type = :mealType, "
+				+ "prep_time = :prepTime, cook_time = :cookTime, calories = :calories, protein = :protein, "
+				+ "fat = :fat, carbs = :carbs, ingredients = :ingredients, instructions = :instructions "
+				+ "WHERE id = :recipeId";
+
+		Map<String, Object> params = new HashMap<>();
+
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			params.put("title", recipe.getTitle());
+			params.put("description", recipe.getDescription());
+			params.put("mealType", recipe.getMealType());
+			params.put("prepTime", recipe.getPrepTime());
+			params.put("cookTime", recipe.getCookTime());
+			params.put("calories", recipe.getCalories());
+			params.put("protein", recipe.getProtein());
+			params.put("fat", recipe.getFat());
+			params.put("carbs", recipe.getCarbs());
+			params.put("ingredients", mapper.writeValueAsString(recipe.getIngredients()));
+			params.put("instructions", mapper.writeValueAsString(recipe.getInstructions()));
+			params.put("recipeId", recipeId);
 		} catch (JsonProcessingException e) {
 			throw new RuntimeException("Failed to serialize ingredients/instructions", e);
 		}
 
-        int rowsUpdated = jdbcTemplate.update(sql, params);
+		int rowsUpdated = jdbcTemplate.update(sql, params);
 
-        return rowsUpdated > 0;
-    }
-    
-    public void savePreferences(String recipeId, Map<String, Object> preferences) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            String jsonPrefs = mapper.writeValueAsString(preferences); // convert Map to JSON string
+		return rowsUpdated > 0;
+	}
 
-            String sql = "UPDATE recipes SET preferences = :preferences WHERE id = :id";
-            MapSqlParameterSource params = new MapSqlParameterSource();
-            params.addValue("id", recipeId);
-            params.addValue("preferences", jsonPrefs);
+	public void savePreferences(String recipeId, Map<String, Object> preferences) {
+		try {
+			ObjectMapper mapper = new ObjectMapper();
+			String jsonPrefs = mapper.writeValueAsString(preferences); // convert Map to JSON string
 
-            jdbcTemplate.update(sql, params);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error saving preferences to DB");
-        }
-    }
-    
-    public Boolean PublishRecipe(String id, int flag) {
-    	String sql = "UPDATE recipes SET flag = :flag "+
-                "WHERE id = :id";
-    	Map<String, Object> params = new HashMap<>();
-    	params.put("id", id);
-    	params.put("flag", flag);
-    	System.out.println("Id: "+id);
-    	int rowsUpdated = jdbcTemplate.update(sql, params);
-        return rowsUpdated > 0;
-    	
-    }
-    
-    public Boolean savedrecipe(String email, String id) {
-    	String sql = "INSERT INTO saved (email, id) VALUES (:email, :id)";
-        Map<String, Object> params = new HashMap<>();
-        params.put("email", email);
-        params.put("id", id);
-    	int rowsUpdated = jdbcTemplate.update(sql, params);
-        return rowsUpdated > 0;
-    	
-    }
-    
-    public boolean doesSavedItemExist(String email,String id) {
+			String sql = "UPDATE recipes SET preferences = :preferences WHERE id = :id";
+			MapSqlParameterSource params = new MapSqlParameterSource();
+			params.addValue("id", recipeId);
+			params.addValue("preferences", jsonPrefs);
+
+			jdbcTemplate.update(sql, params);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new RuntimeException("Error saving preferences to DB");
+		}
+	}
+
+	public Boolean PublishRecipe(String id, int flag) {
+		String sql = "UPDATE recipes SET flag = :flag " + "WHERE id = :id";
+		Map<String, Object> params = new HashMap<>();
+		params.put("id", id);
+		params.put("flag", flag);
+		System.out.println("Id: " + id);
+		int rowsUpdated = jdbcTemplate.update(sql, params);
+		return rowsUpdated > 0;
+
+	}
+
+	public Boolean savedrecipe(String email, String id) {
+		String sql = "INSERT INTO saved (email, id) VALUES (:email, :id)";
+		Map<String, Object> params = new HashMap<>();
+		params.put("email", email);
+		params.put("id", id);
+		int rowsUpdated = jdbcTemplate.update(sql, params);
+		return rowsUpdated > 0;
+
+	}
+
+	public boolean doesSavedItemExist(String email, String id) {
 		String CHECK_EMAIL_EXISTS = "SELECT COUNT(*) FROM saved WHERE email = :email AND id = :id";
 		MapSqlParameterSource params = new MapSqlParameterSource();
 		params.addValue("email", email);
@@ -213,28 +210,102 @@ public class RecipeRepository {
 
 		return count > 0;
 	}
-    
-    public void DeletesavedRecipee(String email,String id) {
-    	String checkSql = "DELETE FROM saved WHERE id = :id AND email = :email";
+
+	public void DeletesavedRecipee(String email, String id) {
+		String checkSql = "DELETE FROM saved WHERE id = :id AND email = :email";
+		Map<String, Object> params = new HashMap<>();
+		params.put("id", id);
+		params.put("email", email);
+		jdbcTemplate.update(checkSql, params);
+	}
+
+	public List<Recipe> findSavedRecipesByEmail(String email) {
+		String sql = "SELECT id FROM saved WHERE email = :email";
+		Map<String, Object> params = Map.of("email", email);
+		List<String> savedRecipeIds = jdbcTemplate.queryForList(sql, params, String.class);
+
+		if (savedRecipeIds.isEmpty()) {
+			return new ArrayList<>();
+		}
+		String recipeSql = "SELECT * FROM recipes WHERE id IN (:ids)";
+		Map<String, Object> recipeParams = Map.of("ids", savedRecipeIds);
+		return jdbcTemplate.query(recipeSql, recipeParams, this::mapRowToRecipe);
+	}
+
+	public Map<String, Object> getRecipeRating(String recipeId) {
+		String sql = "SELECT AVG(rating) AS averageRating, COUNT(rating) AS count FROM recipe_ratings WHERE recipe_id = :recipeId";
+		Map<String, Object> params = new HashMap<>();
+		params.put("recipeId", recipeId);
+
+		return jdbcTemplate.queryForMap(sql, params);
+	}
+
+	public Double getUserRating(String recipeId, String email) {
+		String sql = "SELECT rating FROM recipe_ratings WHERE recipe_id = :recipeId AND email = :email";
+		Map<String, Object> params = new HashMap<>();
+		params.put("recipeId", recipeId);
+		params.put("email", email);
+
+		Double rating = jdbcTemplate.queryForObject(sql, params, Double.class);
+		return rating != null ? rating : 0.0;
+	}
+
+	public void submitRating(String recipeId, Double rating, String email) {
+		String sql = "INSERT INTO recipe_ratings (recipe_id, rating, email) " + "VALUES (:recipeId, :rating, :email) "
+				+ "ON DUPLICATE KEY UPDATE rating = :rating";
+
+		Map<String, Object> params = new HashMap<>();
+		params.put("recipeId", recipeId);
+		params.put("rating", rating);
+		params.put("email", email);
+
+		jdbcTemplate.update(sql, params);
+
+		updateRecipeRating(recipeId);
+	}
+
+	public void deleteUserRating(String recipeId, String email) {
+		String sql = "DELETE FROM recipe_ratings WHERE recipe_id = :recipeId AND email = :email";
+		Map<String, Object> params = new HashMap<>();
+		params.put("recipeId", recipeId);
+		params.put("email", email);
+
+		jdbcTemplate.update(sql, params);
+		updateRecipeRating(recipeId);
+
+	}
+
+	private void updateRecipeRating(String recipeId) {
+		String sql = "SELECT AVG(rating) AS averageRating FROM recipe_ratings WHERE recipe_id = :recipeId";
+		Map<String, Object> params = new HashMap<>();
+		params.put("recipeId", recipeId);
+
+		Double averageRating = jdbcTemplate.queryForObject(sql, params, Double.class);
+		if (averageRating != null) {
+			String updateRecipeSql = "UPDATE recipes SET rating = :rating WHERE id = :recipeId";
+			Map<String, Object> updateParams = new HashMap<>();
+			updateParams.put("rating", averageRating);
+			updateParams.put("recipeId", recipeId);
+			jdbcTemplate.update(updateRecipeSql, updateParams);
+		}
+		else {
+			String updateRecipeSql = "UPDATE recipes SET rating = 0 WHERE id = :recipeId";
+			Map<String, Object> updateParams = new HashMap<>();
+			updateParams.put("recipeId", recipeId);
+			jdbcTemplate.update(updateRecipeSql, updateParams);
+		}
+	}
+	
+    public Map<String, String> getRecipeDetailsById(String recipeId) {
+        String sql = "SELECT title, email FROM recipes WHERE id = :recipeId";
         Map<String, Object> params = new HashMap<>();
-        params.put("id", id);
-        params.put("email", email);
-        jdbcTemplate.update(checkSql, params);
+        params.put("recipeId", recipeId);
+        return jdbcTemplate.queryForObject(sql, params, (rs, rowNum) -> {
+            Map<String, String> result = new HashMap<>();
+            result.put("title", rs.getString("title"));
+            result.put("email", rs.getString("email"));
+            return result;
+        });
     }
-    
-    public List<Recipe> findSavedRecipesByEmail(String email) {
-        String sql = "SELECT id FROM saved WHERE email = :email";
-        Map<String, Object> params = Map.of("email", email);
-        List<String> savedRecipeIds = jdbcTemplate.queryForList(sql, params, String.class);
-
-        if (savedRecipeIds.isEmpty()) {
-            return new ArrayList<>();
-        }
-        String recipeSql = "SELECT * FROM recipes WHERE id IN (:ids)";
-        Map<String, Object> recipeParams = Map.of("ids", savedRecipeIds);
-        return jdbcTemplate.query(recipeSql, recipeParams, this::mapRowToRecipe);
-    }
-
-
 
 }

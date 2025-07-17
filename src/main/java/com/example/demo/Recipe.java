@@ -1,6 +1,8 @@
 package com.example.demo;
 
 import lombok.Data;
+
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
@@ -22,10 +24,21 @@ public class Recipe {
     private String date;
     private Map<String, Object> preferences;
     private int flag;
+    private Double rating;
 }
 
 @Data
 class RecipePreferenceRequest {
     private String recipeId;
     private Map<String, Object> preferences;
+}
+
+@Data
+class RecipeNotification {
+    private int id;
+    private String message;
+    private Timestamp time;
+    private boolean isUnread;
+    private String recipeId;
+
 }

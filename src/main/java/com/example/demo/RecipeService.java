@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -33,11 +34,12 @@ public class RecipeService {
     public List<Recipe> getAllRecipes() {
         return recipeRepository.findAll();
     }
+    public List<Recipe> getAllPublishedRecipes() {
+        return recipeRepository.findAllPublishedRecipe();
+    }
 
     public List<Recipe> getRecipeById(String email) {
-    	List<Recipe>recipes=recipeRepository.findById(email);
-    	System.out.println(recipes.get(2).getPreferences());
-        return recipes;
+        return recipeRepository.findById(email);
     }
     
     public boolean DeleteRecipe(String recipeId) {
@@ -68,6 +70,25 @@ public class RecipeService {
     
     public List<Recipe> getSavedRecipeById(String email) {
         return recipeRepository.findSavedRecipesByEmail(email);
+    }
+    
+    public Map<String, Object> getRecipeRating(String recipeId) {
+        return recipeRepository.getRecipeRating(recipeId);
+    }
+
+    public Double getUserRating(String recipeId, String email) {
+        return recipeRepository.getUserRating(recipeId, email);
+    }
+
+    public void submitRating(String recipeId, Double rating, String email) {
+        recipeRepository.submitRating(recipeId, rating, email);
+    }
+
+    public void deleteUserRating(String recipeId, String email) {
+        recipeRepository.deleteUserRating(recipeId, email);
+    }
+    public Map<String, String> getRecipeTitleAndEmail(String recipeId) {
+        return recipeRepository.getRecipeDetailsById(recipeId);
     }
 
 }

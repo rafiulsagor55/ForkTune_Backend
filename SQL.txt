@@ -1,4 +1,4 @@
--- create database ForkTune;
+create database ForkTune;
 use ForkTune;
 
 
@@ -105,3 +105,28 @@ use ForkTune;
 -- VALUES ('rafeulsagor@gmail.com', '123456');
 
 select * from saved;
+
+new sql:
+
+-- alter table recipes add column rating double default 0.0;
+
+-- CREATE TABLE recipe_ratings (
+--     id INT AUTO_INCREMENT PRIMARY KEY,
+--     recipe_id VARCHAR(255),
+--     rating DOUBLE,
+--     email VARCHAR(255),
+--     -- FOREIGN KEY (recipe_id) REFERENCES recipes(id),
+--     UNIQUE (recipe_id, email)
+-- );
+
+
+-- CREATE TABLE recipe_notifications (
+--     id INT AUTO_INCREMENT PRIMARY KEY,
+--     email VARCHAR(255),
+--     message TEXT,
+--     time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     is_unread BOOLEAN default true,
+--     recipe_id VARCHAR(255),
+--     FOREIGN KEY (email) REFERENCES users(email) on delete cascade
+-- );
+
