@@ -148,28 +148,25 @@ public class UserRepository {
 //    }
     
     public void saveUserPreferences(String email, UserPreferences preferences) {
-        try {
-            // Convert preferences object to JSON string
-            ObjectMapper mapper = new ObjectMapper();
-            String jsonPrefs = mapper.writeValueAsString(preferences);
+    try {
+        ObjectMapper mapper = new ObjectMapper();
+        String jsonPrefs = mapper.writeValueAsString(preferences);
 
-            // SQL query to insert or update user preferences
-            String sql = "INSERT INTO user_preferences (email, preferences_json) " +
-                         "VALUES (:email, :preferencesJson) " +
-                         "ON CONFLICT (email) DO UPDATE SET preferences_json = :preferencesJson";
+        String sql = "INSERT INTO user_preferences (email, preferences_json) " +
+                     "VALUES (:email, :preferencesJson) " +
+                     "ON CONFLICT (email) DO UPDATE SET preferences_json = EXCLUDED.preferences_json";
 
-            // Parameters for the query
-            Map<String, Object> params = new HashMap<>();
-            params.put("email", email);
-            params.put("preferencesJson", jsonPrefs);
+        Map<String, Object> params = new HashMap<>();
+        params.put("email", email);
+        params.put("preferencesJson", jsonPrefs);
 
-            // Execute the query
-            jdbcTemplate.update(sql, params); 
-        } catch (Exception e) {
-            // Handle exceptions gracefully
-            throw new IllegalArgumentException("Error saving preferences: " + e.getMessage());
-        }
+        jdbcTemplate.update(sql, params);
+
+    } catch (Exception e) {
+        throw new IllegalArgumentException("Error saving preferences: " + e.getMessage(), e);
     }
+}
+
 
         public UserPreferences getUserPreferences(String email) {
             try {
