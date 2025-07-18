@@ -156,12 +156,11 @@ public class UserRepository {
         ObjectMapper mapper = new ObjectMapper();
         String jsonPrefs = mapper.writeValueAsString(preferences);
 
-        String sql = """
-            INSERT INTO user_preferences (email, preferences_json)
-            VALUES (?, ?)
-            ON CONFLICT (email)
-            DO UPDATE SET preferences_json = EXCLUDED.preferences_json
-            """;
+        String sql =
+            "INSERT INTO user_preferences (email, preferences_json) " +
+            "VALUES (?, ?) " +
+            "ON CONFLICT (email) DO UPDATE " +
+            "SET preferences_json = EXCLUDED.preferences_json";
 
         jdbcTemplatePure.update(sql, email, jsonPrefs);
 
