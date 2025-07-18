@@ -165,7 +165,7 @@ public class RecipeRepository {
 	// }
 
 
-	public boolean updateRecipe(String recipeId, Recipe recipe) {
+	public boolean updaterecipe(String recipeId, Recipe recipe) {
     String sql = """
         UPDATE recipes SET 
             title = :title, 
