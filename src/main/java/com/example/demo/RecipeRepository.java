@@ -34,7 +34,7 @@ public class RecipeRepository {
 
 	public void save(Recipe recipe, String email) {
 		String sql = "INSERT INTO recipes (title, email, image_id, description, prep_time, cook_time, calories, protein, fat, carbs, ingredients, instructions, meal_type, date) "
-				+ "VALUES (:title, :email, :imageId, :description, :prepTime, :cookTime, :calories, :protein, :fat, :carbs, :ingredients, :instructions, :mealType, :date)";
+            + "VALUES (:title, :email, :imageId, :description, :prepTime, :cookTime, :calories, :protein, :fat, :carbs, :ingredients::jsonb, :instructions::jsonb, :mealType, :date)";
 
 		Map<String, Object> params = new HashMap<>();
 		try {
@@ -135,7 +135,7 @@ public class RecipeRepository {
 	public boolean updaterecipe(String recipeId, Recipe recipe) {
 		String sql = "UPDATE recipes SET title = :title, description = :description, meal_type = :mealType, "
 				+ "prep_time = :prepTime, cook_time = :cookTime, calories = :calories, protein = :protein, "
-				+ "fat = :fat, carbs = :carbs, ingredients = :ingredients, instructions = :instructions "
+				+ "fat = :fat, carbs = :carbs, ingredients = :ingredients::jsonb, instructions = :instructions::jsonb "
 				+ "WHERE id = :recipeId";
 
 		Map<String, Object> params = new HashMap<>();
@@ -168,7 +168,7 @@ public class RecipeRepository {
 			ObjectMapper mapper = new ObjectMapper();
 			String jsonPrefs = mapper.writeValueAsString(preferences); // convert Map to JSON string
 
-			String sql = "UPDATE recipes SET preferences = :preferences WHERE id = :id";
+			String sql = "UPDATE recipes SET preferences = :preferences::jsonb WHERE id = :id";
 			MapSqlParameterSource params = new MapSqlParameterSource();
 			params.addValue("id", recipeId);
 			params.addValue("preferences", jsonPrefs);
