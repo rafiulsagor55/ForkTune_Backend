@@ -187,14 +187,19 @@ public class RecipeRepository {
     try {
         ObjectMapper mapper = new ObjectMapper();
 
-        // ✅ JSONB হিসেবে bind করার জন্য PGobject ব্যবহার
+        String ingredientsJsonStr = mapper.writeValueAsString(recipe.getIngredients());
+        String instructionsJsonStr = mapper.writeValueAsString(recipe.getInstructions());
+
+        System.out.println("👉 Ingredients JSON: " + ingredientsJsonStr);
+        System.out.println("👉 Instructions JSON: " + instructionsJsonStr);
+
         PGobject ingredientsJson = new PGobject();
         ingredientsJson.setType("jsonb");
-        ingredientsJson.setValue(mapper.writeValueAsString(recipe.getIngredients()));
+        ingredientsJson.setValue(ingredientsJsonStr);
 
         PGobject instructionsJson = new PGobject();
         instructionsJson.setType("jsonb");
-        instructionsJson.setValue(mapper.writeValueAsString(recipe.getInstructions()));
+        instructionsJson.setValue(instructionsJsonStr);
 
         int rowsUpdated = jdbcTemplatePure.update(
                 sql,
@@ -207,17 +212,21 @@ public class RecipeRepository {
                 recipe.getProtein(),
                 recipe.getFat(),
                 recipe.getCarbs(),
-                ingredientsJson, 
-                instructionsJson, 
+                ingredientsJson,
+                instructionsJson,
                 recipeId
         );
+
+        System.out.println("✅ Rows updated: " + rowsUpdated);
 
         return rowsUpdated > 0;
 
     } catch (Exception e) {
-        throw new RuntimeException("Failed to update recipe JSONB fields", e);
+        e.printStackTrace(); // full error দেখতে হবে
+        throw new RuntimeException("❌ Failed to update recipe JSONB fields", e);
     }
 }
+
 
 
 
@@ -242,16 +251,22 @@ public void savePreferences(String recipeId, Map<String, Object> preferences) {
     try {
         ObjectMapper mapper = new ObjectMapper();
 
+        // JSON string তৈরি করে লগ দিই
+        String jsonStr = mapper.writeValueAsString(preferences);
+        System.out.println("👉 Will save JSON: " + jsonStr);
+
         PGobject jsonObject = new PGobject();
         jsonObject.setType("jsonb");
-        jsonObject.setValue(mapper.writeValueAsString(preferences));
+        jsonObject.setValue(jsonStr);
 
         String sql = "UPDATE recipes SET preferences = ? WHERE id = ?";
 
-        jdbcTemplatePure.update(sql, jsonObject, recipeId);
+        int rows = jdbcTemplatePure.update(sql, jsonObject, recipeId);
+        System.out.println("✅ Rows updated: " + rows);
 
     } catch (Exception e) {
-        throw new RuntimeException("Error saving preferences to DB", e);
+        e.printStackTrace(); // full stack trace দেখাও
+        throw new RuntimeException("❌ Error saving preferences to DB", e);
     }
 }
 
