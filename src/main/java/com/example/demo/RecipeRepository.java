@@ -177,8 +177,8 @@ public class RecipeRepository {
             protein = :protein,
             fat = :fat, 
             carbs = :carbs,
-            ingredients = :ingredients::jsonb,
-            instructions = :instructions::jsonb
+            ingredients = to_jsonb(:ingredients::json),
+            instructions = to_jsonb(:instructions::json)
         WHERE id = :recipeId
     """;
 
@@ -195,8 +195,11 @@ public class RecipeRepository {
         params.put("protein", recipe.getProtein());
         params.put("fat", recipe.getFat());
         params.put("carbs", recipe.getCarbs());
+
+        // JSON string পাঠাচ্ছি
         params.put("ingredients", mapper.writeValueAsString(recipe.getIngredients()));
         params.put("instructions", mapper.writeValueAsString(recipe.getInstructions()));
+
         params.put("recipeId", recipeId);
 
     } catch (JsonProcessingException e) {
@@ -206,6 +209,7 @@ public class RecipeRepository {
     int rowsUpdated = jdbcTemplate.update(sql, params);
     return rowsUpdated > 0;
 }
+
 
 	// public void savePreferences(String recipeId, Map<String, Object> preferences) {
 	// 	try {
