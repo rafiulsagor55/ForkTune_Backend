@@ -75,7 +75,6 @@
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-jackson</artifactId>
 			<version>0.11.5</version> <!-- For JSON parsing -->
-			<scope>runtime</scope>
 		</dependency>
 
 		<dependency>
