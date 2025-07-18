@@ -167,7 +167,7 @@ public class RecipeRepository {
 	// }
 
 
-public boolean updaterecipe(String recipeId, Recipe recipe) {
+	public boolean updaterecipe(String recipeId, Recipe recipe) {
     String sql = """
         UPDATE recipes SET 
             title = ?, 
@@ -200,7 +200,7 @@ public boolean updaterecipe(String recipeId, Recipe recipe) {
         instructionsPg.setType("jsonb");
         instructionsPg.setValue(instructionsJson);
 
-        int rowsUpdated = jdbcTemplate.update(
+        int rowsUpdated = jdbcTemplatePure.update(
                 sql,
                 recipe.getTitle(),
                 recipe.getDescription(),
@@ -255,7 +255,7 @@ public void savePreferences(String recipeId, Map<String, Object> preferences) {
 
         String sql = "UPDATE recipes SET preferences = ? WHERE id = ?";
 
-        jdbcTemplate.update(sql, prefsPg, recipeId);
+        jdbcTemplatePure.update(sql, prefsPg, recipeId);
 
         System.out.println("✅ Preferences updated successfully!");
 
