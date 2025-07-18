@@ -196,7 +196,7 @@ public class RecipeRepository {
         instructionsJson.setType("jsonb");
         instructionsJson.setValue(mapper.writeValueAsString(recipe.getInstructions()));
 
-        int rowsUpdated = jdbcTemplatePure.getJdbcTemplate().update(
+        int rowsUpdated = jdbcTemplatePure.update(
                 sql,
                 recipe.getTitle(),
                 recipe.getDescription(),
@@ -248,7 +248,7 @@ public void savePreferences(String recipeId, Map<String, Object> preferences) {
 
         String sql = "UPDATE recipes SET preferences = ? WHERE id = ?";
 
-        jdbcTemplatePure.getJdbcTemplate().update(sql, jsonObject, recipeId);
+        jdbcTemplatePure.update(sql, jsonObject, recipeId);
 
     } catch (Exception e) {
         throw new RuntimeException("Error saving preferences to DB", e);
