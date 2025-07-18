@@ -179,31 +179,28 @@ public boolean updaterecipe(String recipeId, Recipe recipe) {
             protein = ?, 
             fat = ?, 
             carbs = ?, 
-            ingredients = ?,   -- ✅ JSONB directly bind হবে
-            instructions = ?   -- ✅ JSONB directly bind হবে
+            ingredients = ?,   -- jsonb
+            instructions = ?   -- jsonb
         WHERE id = ?
     """;
 
     try {
         ObjectMapper mapper = new ObjectMapper();
 
-        // JSON string বানানো
-        String ingredientsJsonStr = mapper.writeValueAsString(recipe.getIngredients());
-        String instructionsJsonStr = mapper.writeValueAsString(recipe.getInstructions());
+        // ✅ JSON string
+        String ingredientsJson = mapper.writeValueAsString(recipe.getIngredients());
+        String instructionsJson = mapper.writeValueAsString(recipe.getInstructions());
 
-        System.out.println("👉 Ingredients JSON: " + ingredientsJsonStr);
-        System.out.println("👉 Instructions JSON: " + instructionsJsonStr);
+        // ✅ PGobject for jsonb
+        PGobject ingredientsPg = new PGobject();
+        ingredientsPg.setType("jsonb");
+        ingredientsPg.setValue(ingredientsJson);
 
-        // ✅ PGobject দিয়ে jsonb type bind
-        PGobject ingredientsJson = new PGobject();
-        ingredientsJson.setType("jsonb");
-        ingredientsJson.setValue(ingredientsJsonStr);
+        PGobject instructionsPg = new PGobject();
+        instructionsPg.setType("jsonb");
+        instructionsPg.setValue(instructionsJson);
 
-        PGobject instructionsJson = new PGobject();
-        instructionsJson.setType("jsonb");
-        instructionsJson.setValue(instructionsJsonStr);
-
-        int rowsUpdated = jdbcTemplatePure.update(
+        int rowsUpdated = jdbcTemplate.update(
                 sql,
                 recipe.getTitle(),
                 recipe.getDescription(),
@@ -214,8 +211,8 @@ public boolean updaterecipe(String recipeId, Recipe recipe) {
                 recipe.getProtein(),
                 recipe.getFat(),
                 recipe.getCarbs(),
-                ingredientsJson,   // ✅ jsonb হিসেবে bind হবে
-                instructionsJson,  // ✅ jsonb হিসেবে bind হবে
+                ingredientsPg,      // ✅ jsonb হিসেবে bind
+                instructionsPg,     // ✅ jsonb হিসেবে bind
                 recipeId
         );
 
@@ -223,8 +220,7 @@ public boolean updaterecipe(String recipeId, Recipe recipe) {
         return rowsUpdated > 0;
 
     } catch (Exception e) {
-        e.printStackTrace();
-        throw new RuntimeException("❌ Failed to update recipe JSONB fields", e);
+        throw new RuntimeException("Failed to update recipe JSONB fields", e);
     }
 }
 
@@ -253,21 +249,18 @@ public void savePreferences(String recipeId, Map<String, Object> preferences) {
         ObjectMapper mapper = new ObjectMapper();
         String jsonPrefs = mapper.writeValueAsString(preferences);
 
-        System.out.println("👉 Will save JSON: " + jsonPrefs);
-
-        // ✅ PGobject দিয়ে jsonb bind
-        PGobject jsonObject = new PGobject();
-        jsonObject.setType("jsonb");
-        jsonObject.setValue(jsonPrefs);
+        PGobject prefsPg = new PGobject();
+        prefsPg.setType("jsonb");
+        prefsPg.setValue(jsonPrefs);
 
         String sql = "UPDATE recipes SET preferences = ? WHERE id = ?";
-        int rows = jdbcTemplatePure.update(sql, jsonObject, recipeId);
 
-        System.out.println("✅ Rows updated: " + rows);
+        jdbcTemplate.update(sql, prefsPg, recipeId);
+
+        System.out.println("✅ Preferences updated successfully!");
 
     } catch (Exception e) {
-        e.printStackTrace();
-        throw new RuntimeException("❌ Error saving preferences to DB", e);
+        throw new RuntimeException("Error saving preferences to DB", e);
     }
 }
 
