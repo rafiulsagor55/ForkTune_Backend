@@ -132,53 +132,119 @@ public class RecipeRepository {
 		return false;
 	}
 
+	// public boolean updaterecipe(String recipeId, Recipe recipe) {
+	// 	String sql = "UPDATE recipes SET title = :title, description = :description, meal_type = :mealType, "
+	// 			+ "prep_time = :prepTime, cook_time = :cookTime, calories = :calories, protein = :protein, "
+	// 			+ "fat = :fat, carbs = :carbs, ingredients = :ingredients::jsonb, instructions = :instructions::jsonb "
+	// 			+ "WHERE id = :recipeId";
+
+	// 	Map<String, Object> params = new HashMap<>();
+
+	// 	try {
+	// 		ObjectMapper mapper = new ObjectMapper();
+	// 		params.put("title", recipe.getTitle());
+	// 		params.put("description", recipe.getDescription());
+	// 		params.put("mealType", recipe.getMealType());
+	// 		params.put("prepTime", recipe.getPrepTime());
+	// 		params.put("cookTime", recipe.getCookTime());
+	// 		params.put("calories", recipe.getCalories());
+	// 		params.put("protein", recipe.getProtein());
+	// 		params.put("fat", recipe.getFat());
+	// 		params.put("carbs", recipe.getCarbs());
+	// 		params.put("ingredients", mapper.writeValueAsString(recipe.getIngredients()));
+	// 		params.put("instructions", mapper.writeValueAsString(recipe.getInstructions()));
+	// 		params.put("recipeId", recipeId);
+	// 	} catch (JsonProcessingException e) {
+	// 		throw new RuntimeException("Failed to serialize ingredients/instructions", e);
+	// 	}
+
+	// 	int rowsUpdated = jdbcTemplate.update(sql, params);
+
+	// 	return rowsUpdated > 0;
+	// }
+
+
 	public boolean updaterecipe(String recipeId, Recipe recipe) {
-		String sql = "UPDATE recipes SET title = :title, description = :description, meal_type = :mealType, "
-				+ "prep_time = :prepTime, cook_time = :cookTime, calories = :calories, protein = :protein, "
-				+ "fat = :fat, carbs = :carbs, ingredients = :ingredients::jsonb, instructions = :instructions::jsonb "
-				+ "WHERE id = :recipeId";
+    String sql = """
+        UPDATE recipes SET 
+            title = :title, 
+            description = :description, 
+            meal_type = :mealType,
+            prep_time = :prepTime, 
+            cook_time = :cookTime, 
+            calories = :calories, 
+            protein = :protein,
+            fat = :fat, 
+            carbs = :carbs,
+            ingredients = CAST(:ingredients AS jsonb),
+            instructions = CAST(:instructions AS jsonb)
+        WHERE id = :recipeId
+    """;
 
-		Map<String, Object> params = new HashMap<>();
+    Map<String, Object> params = new HashMap<>();
+    try {
+        ObjectMapper mapper = new ObjectMapper();
+        params.put("title", recipe.getTitle());
+        params.put("description", recipe.getDescription());
+        params.put("mealType", recipe.getMealType());
+        params.put("prepTime", recipe.getPrepTime());
+        params.put("cookTime", recipe.getCookTime());
+        params.put("calories", recipe.getCalories());
+        params.put("protein", recipe.getProtein());
+        params.put("fat", recipe.getFat());
+        params.put("carbs", recipe.getCarbs());
+        params.put("ingredients", mapper.writeValueAsString(recipe.getIngredients()));  // JSON string
+        params.put("instructions", mapper.writeValueAsString(recipe.getInstructions())); // JSON string
+        params.put("recipeId", recipeId);
+    } catch (JsonProcessingException e) {
+        throw new RuntimeException("Failed to serialize ingredients/instructions", e);
+    }
 
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			params.put("title", recipe.getTitle());
-			params.put("description", recipe.getDescription());
-			params.put("mealType", recipe.getMealType());
-			params.put("prepTime", recipe.getPrepTime());
-			params.put("cookTime", recipe.getCookTime());
-			params.put("calories", recipe.getCalories());
-			params.put("protein", recipe.getProtein());
-			params.put("fat", recipe.getFat());
-			params.put("carbs", recipe.getCarbs());
-			params.put("ingredients", mapper.writeValueAsString(recipe.getIngredients()));
-			params.put("instructions", mapper.writeValueAsString(recipe.getInstructions()));
-			params.put("recipeId", recipeId);
-		} catch (JsonProcessingException e) {
-			throw new RuntimeException("Failed to serialize ingredients/instructions", e);
-		}
+    int rowsUpdated = jdbcTemplate.update(sql, params);
+    return rowsUpdated > 0;
+}
 
-		int rowsUpdated = jdbcTemplate.update(sql, params);
 
-		return rowsUpdated > 0;
-	}
+	// public void savePreferences(String recipeId, Map<String, Object> preferences) {
+	// 	try {
+	// 		ObjectMapper mapper = new ObjectMapper();
+	// 		String jsonPrefs = mapper.writeValueAsString(preferences); // convert Map to JSON string
+
+	// 		String sql = "UPDATE recipes SET preferences = :preferences::jsonb WHERE id = :id";
+	// 		MapSqlParameterSource params = new MapSqlParameterSource();
+	// 		params.addValue("id", recipeId);
+	// 		params.addValue("preferences", jsonPrefs);
+
+	// 		jdbcTemplate.update(sql, params);
+	// 	} catch (Exception e) {
+	// 		e.printStackTrace();
+	// 		throw new RuntimeException("Error saving preferences to DB");
+	// 	}
+	// }
+
 
 	public void savePreferences(String recipeId, Map<String, Object> preferences) {
-		try {
-			ObjectMapper mapper = new ObjectMapper();
-			String jsonPrefs = mapper.writeValueAsString(preferences); // convert Map to JSON string
+    try {
+        ObjectMapper mapper = new ObjectMapper();
+        String jsonPrefs = mapper.writeValueAsString(preferences);
 
-			String sql = "UPDATE recipes SET preferences = :preferences::jsonb WHERE id = :id";
-			MapSqlParameterSource params = new MapSqlParameterSource();
-			params.addValue("id", recipeId);
-			params.addValue("preferences", jsonPrefs);
+        String sql = """
+            UPDATE recipes 
+            SET preferences = CAST(:preferences AS jsonb)
+            WHERE id = :id
+        """;
 
-			jdbcTemplate.update(sql, params);
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException("Error saving preferences to DB");
-		}
-	}
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        params.addValue("id", recipeId);
+        params.addValue("preferences", jsonPrefs);
+
+        jdbcTemplate.update(sql, params);
+    } catch (Exception e) {
+        e.printStackTrace();
+        throw new RuntimeException("Error saving preferences to DB");
+    }
+}
+
 
 	public Boolean PublishRecipe(String id, int flag) {
 		String sql = "UPDATE recipes SET flag = :flag " + "WHERE id = :id";
