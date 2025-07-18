@@ -179,8 +179,8 @@ public boolean updaterecipe(String recipeId, Recipe recipe) {
             protein = ?, 
             fat = ?, 
             carbs = ?, 
-            ingredients = ?::jsonb, 
-            instructions = ?::jsonb 
+            ingredients = CAST(? AS jsonb), 
+            instructions = CAST(? AS jsonb)
         WHERE id = ?
     """;
 
@@ -204,8 +204,8 @@ public boolean updaterecipe(String recipeId, Recipe recipe) {
                 recipe.getProtein(),
                 recipe.getFat(),
                 recipe.getCarbs(),
-                ingredientsJsonStr,  // PGobject নয়, raw JSON string
-                instructionsJsonStr, // PGobject নয়, raw JSON string
+                ingredientsJsonStr,
+                instructionsJsonStr,
                 recipeId
         );
 
@@ -217,7 +217,6 @@ public boolean updaterecipe(String recipeId, Recipe recipe) {
         throw new RuntimeException("❌ Failed to update recipe JSONB fields", e);
     }
 }
-
 
 
 
@@ -246,8 +245,8 @@ public void savePreferences(String recipeId, Map<String, Object> preferences) {
 
         System.out.println("👉 Will save JSON: " + jsonStr);
 
-        // এখানে PGobject লাগবে না
-        String sql = "UPDATE recipes SET preferences = ?::jsonb WHERE id = ?";
+        // ✅ এখানে CAST ব্যবহার করো
+        String sql = "UPDATE recipes SET preferences = CAST(? AS jsonb) WHERE id = ?";
         int rows = jdbcTemplatePure.update(sql, jsonStr, recipeId);
 
         System.out.println("✅ Rows updated: " + rows);
@@ -257,6 +256,7 @@ public void savePreferences(String recipeId, Map<String, Object> preferences) {
         throw new RuntimeException("❌ Error saving preferences to DB", e);
     }
 }
+
 
 
 
