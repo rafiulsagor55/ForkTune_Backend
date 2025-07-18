@@ -238,7 +238,7 @@ public void savePreferences(String recipeId, Map<String, Object> preferences) {
         jdbcTemplate.update(sql, params);
     } catch (Exception e) {
         e.printStackTrace();
-        throw new RuntimeException(e.message);
+        throw new RuntimeException("Failed to serialize ingredients/instructions", e);
     }
 }
 
