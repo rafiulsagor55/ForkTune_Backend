@@ -75,6 +75,7 @@
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-jackson</artifactId>
 			<version>0.11.5</version> <!-- For JSON parsing -->
+
 		</dependency>
 
 		<dependency>
@@ -86,7 +87,6 @@
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<version>42.7.3</version>
-			<scope>runtime</scope>
 		</dependency>
 
 		<dependency>
