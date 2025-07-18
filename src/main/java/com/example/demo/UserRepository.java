@@ -152,13 +152,16 @@ public class UserRepository {
         ObjectMapper mapper = new ObjectMapper();
         String jsonPrefs = mapper.writeValueAsString(preferences);
 
-        String sql = "INSERT INTO user_preferences (email, preferences_json) " +
-                     "VALUES (:email, :preferencesJson) " +
-                     "ON CONFLICT (email) DO UPDATE SET preferences_json = EXCLUDED.preferences_json";
+        String sql = """
+            INSERT INTO user_preferences (email, preferences_json)
+            VALUES (:email, :preferencesJson)
+            ON CONFLICT (email) DO UPDATE 
+            SET preferences_json = EXCLUDED.preferences_json
+            """;
 
-        Map<String, Object> params = new HashMap<>();
-        params.put("email", email);
-        params.put("preferencesJson", jsonPrefs);
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("email", email)
+                .addValue("preferencesJson", jsonPrefs);
 
         jdbcTemplate.update(sql, params);
 
@@ -166,6 +169,7 @@ public class UserRepository {
         throw new IllegalArgumentException("Error saving preferences: " + e.getMessage(), e);
     }
 }
+
 
 
         public UserPreferences getUserPreferences(String email) {
