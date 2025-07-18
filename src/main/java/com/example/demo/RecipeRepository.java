@@ -177,8 +177,8 @@ public class RecipeRepository {
             protein = :protein,
             fat = :fat, 
             carbs = :carbs,
-            ingredients = :ingredients,
-            instructions = :instructions
+            ingredients = :ingredients::jsonb,
+            instructions = :instructions::jsonb
         WHERE id = :recipeId
     """;
 
@@ -195,8 +195,8 @@ public class RecipeRepository {
         params.put("protein", recipe.getProtein());
         params.put("fat", recipe.getFat());
         params.put("carbs", recipe.getCarbs());
-        params.put("ingredients", toJsonb(mapper.writeValueAsString(recipe.getIngredients())));
-        params.put("instructions", toJsonb(mapper.writeValueAsString(recipe.getInstructions())));
+        params.put("ingredients", mapper.writeValueAsString(recipe.getIngredients()));
+        params.put("instructions", mapper.writeValueAsString(recipe.getInstructions()));
         params.put("recipeId", recipeId);
 
     } catch (JsonProcessingException e) {
@@ -205,17 +205,6 @@ public class RecipeRepository {
 
     int rowsUpdated = jdbcTemplate.update(sql, params);
     return rowsUpdated > 0;
-}
-
-private PGobject toJsonb(String json) {
-    try {
-        PGobject jsonObject = new PGobject();
-        jsonObject.setType("jsonb");
-        jsonObject.setValue(json);
-        return jsonObject;
-    } catch (Exception e) {
-        throw new RuntimeException("Failed to create PGobject for JSONB", e);
-    }
 }
 
 	// public void savePreferences(String recipeId, Map<String, Object> preferences) {
@@ -240,16 +229,16 @@ public void savePreferences(String recipeId, Map<String, Object> preferences) {
         ObjectMapper mapper = new ObjectMapper();
         String jsonPrefs = mapper.writeValueAsString(preferences);
 
-        String sql = "UPDATE recipes SET preferences = :preferences WHERE id = :id";
+        String sql = "UPDATE recipes SET preferences = :preferences::jsonb WHERE id = :id";
 
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("id", recipeId);
-        params.addValue("preferences", toJsonb(jsonPrefs));
+        params.addValue("preferences", jsonPrefs); // Just pass the string, let PostgreSQL cast it
 
         jdbcTemplate.update(sql, params);
     } catch (Exception e) {
         e.printStackTrace();
-        throw new RuntimeException("Error saving preferences to DB");
+        throw new RuntimeException(e.message);
     }
 }
 
