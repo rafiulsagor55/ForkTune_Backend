@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.*;
 import org.springframework.stereotype.Repository;
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.postgresql.util.PGobject;
 
 import java.sql.ResultSet;
 import java.util.*;
@@ -164,7 +165,7 @@ public class RecipeRepository {
 	// }
 
 
-	public boolean updaterecipe(String recipeId, Recipe recipe) {
+	public boolean updateRecipe(String recipeId, Recipe recipe) {
     String sql = """
         UPDATE recipes SET 
             title = :title, 
@@ -176,14 +177,15 @@ public class RecipeRepository {
             protein = :protein,
             fat = :fat, 
             carbs = :carbs,
-            ingredients = CAST(:ingredients AS jsonb),
-            instructions = CAST(:instructions AS jsonb)
+            ingredients = :ingredients,
+            instructions = :instructions
         WHERE id = :recipeId
     """;
 
     Map<String, Object> params = new HashMap<>();
     try {
         ObjectMapper mapper = new ObjectMapper();
+
         params.put("title", recipe.getTitle());
         params.put("description", recipe.getDescription());
         params.put("mealType", recipe.getMealType());
@@ -193,9 +195,10 @@ public class RecipeRepository {
         params.put("protein", recipe.getProtein());
         params.put("fat", recipe.getFat());
         params.put("carbs", recipe.getCarbs());
-        params.put("ingredients", mapper.writeValueAsString(recipe.getIngredients()));  // JSON string
-        params.put("instructions", mapper.writeValueAsString(recipe.getInstructions())); // JSON string
+        params.put("ingredients", toJsonb(mapper.writeValueAsString(recipe.getIngredients())));
+        params.put("instructions", toJsonb(mapper.writeValueAsString(recipe.getInstructions())));
         params.put("recipeId", recipeId);
+
     } catch (JsonProcessingException e) {
         throw new RuntimeException("Failed to serialize ingredients/instructions", e);
     }
@@ -204,6 +207,16 @@ public class RecipeRepository {
     return rowsUpdated > 0;
 }
 
+private PGobject toJsonb(String json) {
+    try {
+        PGobject jsonObject = new PGobject();
+        jsonObject.setType("jsonb");
+        jsonObject.setValue(json);
+        return jsonObject;
+    } catch (Exception e) {
+        throw new RuntimeException("Failed to create PGobject for JSONB", e);
+    }
+}
 
 	// public void savePreferences(String recipeId, Map<String, Object> preferences) {
 	// 	try {
@@ -222,21 +235,16 @@ public class RecipeRepository {
 	// 	}
 	// }
 
-
-	public void savePreferences(String recipeId, Map<String, Object> preferences) {
+public void savePreferences(String recipeId, Map<String, Object> preferences) {
     try {
         ObjectMapper mapper = new ObjectMapper();
         String jsonPrefs = mapper.writeValueAsString(preferences);
 
-        String sql = """
-            UPDATE recipes 
-            SET preferences = CAST(:preferences AS jsonb)
-            WHERE id = :id
-        """;
+        String sql = "UPDATE recipes SET preferences = :preferences WHERE id = :id";
 
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("id", recipeId);
-        params.addValue("preferences", jsonPrefs);
+        params.addValue("preferences", toJsonb(jsonPrefs));
 
         jdbcTemplate.update(sql, params);
     } catch (Exception e) {
