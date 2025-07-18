@@ -127,25 +127,50 @@ public class UserRepository {
 		jdbcTemplate.update(INCREMENT_COUNT_SQL, params);
 	}
     
+//    public void saveUserPreferences(String email, UserPreferences preferences) {
+//        try {
+//            ObjectMapper mapper = new ObjectMapper();
+//            String jsonPrefs = mapper.writeValueAsString(preferences);
+//
+//            String sql = "INSERT INTO user_preferences (email, preferences_json) " +
+//                    "VALUES (:email, :preferencesJson) " +
+//                    "ON DUPLICATE KEY UPDATE preferences_json = :preferencesJson";
+//
+//            Map<String, Object> params = new HashMap<>();
+//            params.put("email", email);
+//            params.put("preferencesJson", jsonPrefs);
+//
+//            jdbcTemplate.update(sql, params); 
+//        } catch (Exception e) {
+//            throw new IllegalArgumentException("Error saving preferences: " + e.getMessage());
+//        }
+//
+//    }
+    
     public void saveUserPreferences(String email, UserPreferences preferences) {
         try {
+            // Convert preferences object to JSON string
             ObjectMapper mapper = new ObjectMapper();
             String jsonPrefs = mapper.writeValueAsString(preferences);
 
+            // SQL query to insert or update user preferences
             String sql = "INSERT INTO user_preferences (email, preferences_json) " +
-                    "VALUES (:email, :preferencesJson) " +
-                    "ON DUPLICATE KEY UPDATE preferences_json = :preferencesJson";
+                         "VALUES (:email, :preferencesJson) " +
+                         "ON CONFLICT (email) DO UPDATE SET preferences_json = :preferencesJson";
 
+            // Parameters for the query
             Map<String, Object> params = new HashMap<>();
             params.put("email", email);
             params.put("preferencesJson", jsonPrefs);
 
+            // Execute the query
             jdbcTemplate.update(sql, params); 
         } catch (Exception e) {
+            // Handle exceptions gracefully
             throw new IllegalArgumentException("Error saving preferences: " + e.getMessage());
         }
-
     }
+
         public UserPreferences getUserPreferences(String email) {
             try {
                 String sql = "SELECT preferences_json FROM user_preferences WHERE email = :email";

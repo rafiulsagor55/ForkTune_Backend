@@ -250,19 +250,39 @@ public class RecipeRepository {
 		return rating != null ? rating : 0.0;
 	}
 
+//	public void submitRating(String recipeId, Double rating, String email) {
+//		String sql = "INSERT INTO recipe_ratings (recipe_id, rating, email) " + "VALUES (:recipeId, :rating, :email) "
+//				+ "ON DUPLICATE KEY UPDATE rating = :rating";
+//
+//		Map<String, Object> params = new HashMap<>();
+//		params.put("recipeId", recipeId);
+//		params.put("rating", rating);
+//		params.put("email", email);
+//
+//		jdbcTemplate.update(sql, params);
+//
+//		updateRecipeRating(recipeId);
+//	}
+	
+	
 	public void submitRating(String recipeId, Double rating, String email) {
-		String sql = "INSERT INTO recipe_ratings (recipe_id, rating, email) " + "VALUES (:recipeId, :rating, :email) "
-				+ "ON DUPLICATE KEY UPDATE rating = :rating";
+	    String sql = """
+	        INSERT INTO recipe_ratings (recipe_id, rating, email)
+	        VALUES (:recipeId, :rating, :email)
+	        ON CONFLICT (recipe_id, email) 
+	        DO UPDATE SET rating = EXCLUDED.rating
+	    """;
 
-		Map<String, Object> params = new HashMap<>();
-		params.put("recipeId", recipeId);
-		params.put("rating", rating);
-		params.put("email", email);
+	    Map<String, Object> params = new HashMap<>();
+	    params.put("recipeId", recipeId);
+	    params.put("rating", rating);
+	    params.put("email", email);
 
-		jdbcTemplate.update(sql, params);
+	    jdbcTemplate.update(sql, params);
 
-		updateRecipeRating(recipeId);
+	    updateRecipeRating(recipeId);
 	}
+
 
 	public void deleteUserRating(String recipeId, String email) {
 		String sql = "DELETE FROM recipe_ratings WHERE recipe_id = :recipeId AND email = :email";
