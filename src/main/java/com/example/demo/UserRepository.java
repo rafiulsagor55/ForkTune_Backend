@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -15,6 +16,9 @@ public class UserRepository {
 
     @Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplatePure;
     
     public boolean doesEmailExist(String email) {
 		String CHECK_EMAIL_EXISTS = "SELECT COUNT(*) FROM users WHERE email = :email";
@@ -154,22 +158,17 @@ public class UserRepository {
 
         String sql = """
             INSERT INTO user_preferences (email, preferences_json)
-            VALUES (:email, :preferencesJson)
-            ON CONFLICT (email) DO UPDATE 
-            SET preferences_json = EXCLUDED.preferences_json
+            VALUES (?, ?)
+            ON CONFLICT (email)
+            DO UPDATE SET preferences_json = EXCLUDED.preferences_json
             """;
 
-        MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("email", email)
-                .addValue("preferencesJson", jsonPrefs);
-
-        jdbcTemplate.update(sql, params);
+        jdbcTemplatePure.update(sql, email, jsonPrefs);
 
     } catch (Exception e) {
         throw new IllegalArgumentException("Error saving preferences: " + e.getMessage(), e);
     }
 }
-
 
 
         public UserPreferences getUserPreferences(String email) {
