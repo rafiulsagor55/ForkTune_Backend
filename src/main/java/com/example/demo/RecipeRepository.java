@@ -179,19 +179,29 @@ public boolean updaterecipe(String recipeId, Recipe recipe) {
             protein = ?, 
             fat = ?, 
             carbs = ?, 
-            ingredients = CAST(? AS jsonb), 
-            instructions = CAST(? AS jsonb)
+            ingredients = ?,   -- ✅ JSONB directly bind হবে
+            instructions = ?   -- ✅ JSONB directly bind হবে
         WHERE id = ?
     """;
 
     try {
         ObjectMapper mapper = new ObjectMapper();
 
+        // JSON string বানানো
         String ingredientsJsonStr = mapper.writeValueAsString(recipe.getIngredients());
         String instructionsJsonStr = mapper.writeValueAsString(recipe.getInstructions());
 
         System.out.println("👉 Ingredients JSON: " + ingredientsJsonStr);
         System.out.println("👉 Instructions JSON: " + instructionsJsonStr);
+
+        // ✅ PGobject দিয়ে jsonb type bind
+        PGobject ingredientsJson = new PGobject();
+        ingredientsJson.setType("jsonb");
+        ingredientsJson.setValue(ingredientsJsonStr);
+
+        PGobject instructionsJson = new PGobject();
+        instructionsJson.setType("jsonb");
+        instructionsJson.setValue(instructionsJsonStr);
 
         int rowsUpdated = jdbcTemplatePure.update(
                 sql,
@@ -204,8 +214,8 @@ public boolean updaterecipe(String recipeId, Recipe recipe) {
                 recipe.getProtein(),
                 recipe.getFat(),
                 recipe.getCarbs(),
-                ingredientsJsonStr,
-                instructionsJsonStr,
+                ingredientsJson,   // ✅ jsonb হিসেবে bind হবে
+                instructionsJson,  // ✅ jsonb হিসেবে bind হবে
                 recipeId
         );
 
@@ -241,13 +251,17 @@ public boolean updaterecipe(String recipeId, Recipe recipe) {
 public void savePreferences(String recipeId, Map<String, Object> preferences) {
     try {
         ObjectMapper mapper = new ObjectMapper();
-        String jsonStr = mapper.writeValueAsString(preferences);
+        String jsonPrefs = mapper.writeValueAsString(preferences);
 
-        System.out.println("👉 Will save JSON: " + jsonStr);
+        System.out.println("👉 Will save JSON: " + jsonPrefs);
 
-        // ✅ এখানে CAST ব্যবহার করো
-        String sql = "UPDATE recipes SET preferences = CAST(? AS jsonb) WHERE id = ?";
-        int rows = jdbcTemplatePure.update(sql, jsonStr, recipeId);
+        // ✅ PGobject দিয়ে jsonb bind
+        PGobject jsonObject = new PGobject();
+        jsonObject.setType("jsonb");
+        jsonObject.setValue(jsonPrefs);
+
+        String sql = "UPDATE recipes SET preferences = ? WHERE id = ?";
+        int rows = jdbcTemplatePure.update(sql, jsonObject, recipeId);
 
         System.out.println("✅ Rows updated: " + rows);
 
@@ -256,6 +270,7 @@ public void savePreferences(String recipeId, Map<String, Object> preferences) {
         throw new RuntimeException("❌ Error saving preferences to DB", e);
     }
 }
+
 
 
 
