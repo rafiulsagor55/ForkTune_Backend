@@ -37,7 +37,7 @@ public class RecipeRepository {
 
 	public void save(Recipe recipe, String email) {
 		String sql = "INSERT INTO recipes (title, email, image_id, description, prep_time, cook_time, calories, protein, fat, carbs, ingredients, instructions, meal_type, date) "
-            + "VALUES (:title, :email, :imageId, :description, :prepTime, :cookTime, :calories, :protein, :fat, :carbs, :ingredients::jsonb, :instructions::jsonb, :mealType, :date)";
+            + "VALUES (:title, :email, :imageId, :description, :prepTime, :cookTime, :calories, :protein, :fat, :carbs, :ingredients, :instructions, :mealType, :date)";
 
 		Map<String, Object> params = new HashMap<>();
 		try {
@@ -230,7 +230,7 @@ public class RecipeRepository {
 	 		ObjectMapper mapper = new ObjectMapper();
 	 		String jsonPrefs = mapper.writeValueAsString(preferences); // convert Map to JSON string
 
-	 		String sql = "UPDATE recipes SET preferences = :preferences::jsonb WHERE id = :id";
+	 		String sql = "UPDATE recipes SET preferences = :preferences WHERE id = :id";
 	 		MapSqlParameterSource params = new MapSqlParameterSource();
 	 		params.addValue("id", recipeId);
 	 		params.addValue("preferences", jsonPrefs);
