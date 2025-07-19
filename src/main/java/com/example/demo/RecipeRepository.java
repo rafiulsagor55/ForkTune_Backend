@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.*;
 import org.springframework.stereotype.Repository;
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.postgresql.util.PGobject;
+//import org.postgresql.util.PGobject;
 import org.springframework.jdbc.core.JdbcTemplate;
 import java.sql.ResultSet;
 import java.util.*;
@@ -135,134 +135,132 @@ public class RecipeRepository {
 		return false;
 	}
 
-	// public boolean updaterecipe(String recipeId, Recipe recipe) {
-	// 	String sql = "UPDATE recipes SET title = :title, description = :description, meal_type = :mealType, "
-	// 			+ "prep_time = :prepTime, cook_time = :cookTime, calories = :calories, protein = :protein, "
-	// 			+ "fat = :fat, carbs = :carbs, ingredients = :ingredients::jsonb, instructions = :instructions::jsonb "
-	// 			+ "WHERE id = :recipeId";
+	 public boolean updaterecipe(String recipeId, Recipe recipe) {
+	 	String sql = "UPDATE recipes SET title = :title, description = :description, meal_type = :mealType, "
+	 			+ "prep_time = :prepTime, cook_time = :cookTime, calories = :calories, protein = :protein, "
+	 			+ "fat = :fat, carbs = :carbs, ingredients = :ingredients, instructions = :instructions "
+	 			+ "WHERE id = :recipeId";
 
-	// 	Map<String, Object> params = new HashMap<>();
+	 	Map<String, Object> params = new HashMap<>();
 
-	// 	try {
-	// 		ObjectMapper mapper = new ObjectMapper();
-	// 		params.put("title", recipe.getTitle());
-	// 		params.put("description", recipe.getDescription());
-	// 		params.put("mealType", recipe.getMealType());
-	// 		params.put("prepTime", recipe.getPrepTime());
-	// 		params.put("cookTime", recipe.getCookTime());
-	// 		params.put("calories", recipe.getCalories());
-	// 		params.put("protein", recipe.getProtein());
-	// 		params.put("fat", recipe.getFat());
-	// 		params.put("carbs", recipe.getCarbs());
-	// 		params.put("ingredients", mapper.writeValueAsString(recipe.getIngredients()));
-	// 		params.put("instructions", mapper.writeValueAsString(recipe.getInstructions()));
-	// 		params.put("recipeId", recipeId);
-	// 	} catch (JsonProcessingException e) {
-	// 		throw new RuntimeException("Failed to serialize ingredients/instructions", e);
-	// 	}
-
-	// 	int rowsUpdated = jdbcTemplate.update(sql, params);
-
-	// 	return rowsUpdated > 0;
-	// }
+	 	try {
+	 		ObjectMapper mapper = new ObjectMapper();
+	 		params.put("title", recipe.getTitle());
+	 		params.put("description", recipe.getDescription());
+	 		params.put("mealType", recipe.getMealType());
+	 		params.put("prepTime", recipe.getPrepTime());
+	 		params.put("cookTime", recipe.getCookTime());
+	 		params.put("calories", recipe.getCalories());
+	 		params.put("protein", recipe.getProtein());
+	 		params.put("fat", recipe.getFat());
+	 		params.put("carbs", recipe.getCarbs());
+	 		params.put("ingredients", mapper.writeValueAsString(recipe.getIngredients()));
+	 		params.put("instructions", mapper.writeValueAsString(recipe.getInstructions()));
+	 		params.put("recipeId", recipeId);
+	 	} catch (JsonProcessingException e) {
+	 		throw new RuntimeException("Failed to serialize ingredients/instructions", e);
+	 	}
+	 	int rowsUpdated = jdbcTemplate.update(sql, params);
+	 	return rowsUpdated > 0;
+	 }
 
 
-	public boolean updaterecipe(String recipeId, Recipe recipe) {
-    String sql = """
-        UPDATE recipes SET 
-            title = ?, 
-            description = ?, 
-            meal_type = ?, 
-            prep_time = ?, 
-            cook_time = ?, 
-            calories = ?, 
-            protein = ?, 
-            fat = ?, 
-            carbs = ?, 
-            ingredients = ?,   -- jsonb
-            instructions = ?   -- jsonb
-        WHERE id = ?
-    """;
-
-    try {
-        ObjectMapper mapper = new ObjectMapper();
-
-        // ✅ JSON string
-        String ingredientsJson = mapper.writeValueAsString(recipe.getIngredients());
-        String instructionsJson = mapper.writeValueAsString(recipe.getInstructions());
-
-        // ✅ PGobject for jsonb
-        PGobject ingredientsPg = new PGobject();
-        ingredientsPg.setType("jsonb");
-        ingredientsPg.setValue(ingredientsJson);
-
-        PGobject instructionsPg = new PGobject();
-        instructionsPg.setType("jsonb");
-        instructionsPg.setValue(instructionsJson);
-
-        int rowsUpdated = jdbcTemplatePure.update(
-                sql,
-                recipe.getTitle(),
-                recipe.getDescription(),
-                recipe.getMealType(),
-                recipe.getPrepTime(),
-                recipe.getCookTime(),
-                recipe.getCalories(),
-                recipe.getProtein(),
-                recipe.getFat(),
-                recipe.getCarbs(),
-                ingredientsPg,      // ✅ jsonb হিসেবে bind
-                instructionsPg,     // ✅ jsonb হিসেবে bind
-                recipeId
-        );
-
-        System.out.println("✅ Rows updated: " + rowsUpdated);
-        return rowsUpdated > 0;
-
-    } catch (Exception e) {
-        throw new RuntimeException("Failed to update recipe JSONB fields", e);
-    }
-}
+//	public boolean updaterecipe(String recipeId, Recipe recipe) {
+//    String sql = """
+//        UPDATE recipes SET 
+//            title = ?, 
+//            description = ?, 
+//            meal_type = ?, 
+//            prep_time = ?, 
+//            cook_time = ?, 
+//            calories = ?, 
+//            protein = ?, 
+//            fat = ?, 
+//            carbs = ?, 
+//            ingredients = ?,   -- jsonb
+//            instructions = ?   -- jsonb
+//        WHERE id = ?
+//    """;
+//
+//    try {
+//        ObjectMapper mapper = new ObjectMapper();
+//
+//        // ✅ JSON string
+//        String ingredientsJson = mapper.writeValueAsString(recipe.getIngredients());
+//        String instructionsJson = mapper.writeValueAsString(recipe.getInstructions());
+//
+//        // ✅ PGobject for jsonb
+//        PGobject ingredientsPg = new PGobject();
+//        ingredientsPg.setType("jsonb");
+//        ingredientsPg.setValue(ingredientsJson);
+//
+//        PGobject instructionsPg = new PGobject();
+//        instructionsPg.setType("jsonb");
+//        instructionsPg.setValue(instructionsJson);
+//
+//        int rowsUpdated = jdbcTemplatePure.update(
+//                sql,
+//                recipe.getTitle(),
+//                recipe.getDescription(),
+//                recipe.getMealType(),
+//                recipe.getPrepTime(),
+//                recipe.getCookTime(),
+//                recipe.getCalories(),
+//                recipe.getProtein(),
+//                recipe.getFat(),
+//                recipe.getCarbs(),
+//                ingredientsPg,      // ✅ jsonb হিসেবে bind
+//                instructionsPg,     // ✅ jsonb হিসেবে bind
+//                recipeId
+//        );
+//
+//        System.out.println("✅ Rows updated: " + rowsUpdated);
+//        return rowsUpdated > 0;
+//
+//    } catch (Exception e) {
+//        throw new RuntimeException("Failed to update recipe JSONB fields", e);
+//    }
+//}
 
 
 
 
-	// public void savePreferences(String recipeId, Map<String, Object> preferences) {
-	// 	try {
-	// 		ObjectMapper mapper = new ObjectMapper();
-	// 		String jsonPrefs = mapper.writeValueAsString(preferences); // convert Map to JSON string
+	 public void savePreferences(String recipeId, Map<String, Object> preferences) {
+	 	try {
+	 		ObjectMapper mapper = new ObjectMapper();
+	 		String jsonPrefs = mapper.writeValueAsString(preferences); // convert Map to JSON string
 
-	// 		String sql = "UPDATE recipes SET preferences = :preferences::jsonb WHERE id = :id";
-	// 		MapSqlParameterSource params = new MapSqlParameterSource();
-	// 		params.addValue("id", recipeId);
-	// 		params.addValue("preferences", jsonPrefs);
+	 		String sql = "UPDATE recipes SET preferences = :preferences::jsonb WHERE id = :id";
+	 		MapSqlParameterSource params = new MapSqlParameterSource();
+	 		params.addValue("id", recipeId);
+	 		params.addValue("preferences", jsonPrefs);
 
-	// 		jdbcTemplate.update(sql, params);
-	// 	} catch (Exception e) {
-	// 		e.printStackTrace();
-	// 		throw new RuntimeException("Error saving preferences to DB");
-	// 	}
-	// }
+	 		jdbcTemplate.update(sql, params);
+	 	} catch (Exception e) {
+	 		e.printStackTrace();
+	 		throw new RuntimeException("Error saving preferences to DB");
+	 	}
+	 }
 
-public void savePreferences(String recipeId, Map<String, Object> preferences) {
-    try {
-        ObjectMapper mapper = new ObjectMapper();
-        String jsonPrefs = mapper.writeValueAsString(preferences);
-
-        PGobject prefsPg = new PGobject();
-        prefsPg.setType("jsonb");
-        prefsPg.setValue(jsonPrefs);
-
-        String sql = "UPDATE recipes SET preferences = ? WHERE id = ?";
-
-        jdbcTemplatePure.update(sql, prefsPg, recipeId);
-
-        System.out.println("✅ Preferences updated successfully!");
-
-    } catch (Exception e) {
-        throw new RuntimeException("Error saving preferences to DB", e);
-    }
-}
+//public void savePreferences(String recipeId, Map<String, Object> preferences) {
+//    try {
+//        ObjectMapper mapper = new ObjectMapper();
+//        String jsonPrefs = mapper.writeValueAsString(preferences);
+//
+//        PGobject prefsPg = new PGobject();
+//        prefsPg.setType("jsonb");
+//        prefsPg.setValue(jsonPrefs);
+//
+//        String sql = "UPDATE recipes SET preferences = ? WHERE id = ?";
+//
+//        jdbcTemplatePure.update(sql, prefsPg, recipeId);
+//
+//        System.out.println("✅ Preferences updated successfully!");
+//
+//    } catch (Exception e) {
+//        throw new RuntimeException("Error saving preferences to DB", e);
+//    }
+//}
 
 
 
@@ -339,38 +337,38 @@ public void savePreferences(String recipeId, Map<String, Object> preferences) {
 		return rating != null ? rating : 0.0;
 	}
 
-//	public void submitRating(String recipeId, Double rating, String email) {
-//		String sql = "INSERT INTO recipe_ratings (recipe_id, rating, email) " + "VALUES (:recipeId, :rating, :email) "
-//				+ "ON DUPLICATE KEY UPDATE rating = :rating";
-//
-//		Map<String, Object> params = new HashMap<>();
-//		params.put("recipeId", recipeId);
-//		params.put("rating", rating);
-//		params.put("email", email);
-//
-//		jdbcTemplate.update(sql, params);
-//
-//		updateRecipeRating(recipeId);
-//	}
-	
-	
 	public void submitRating(String recipeId, Double rating, String email) {
-	    String sql = """
-	        INSERT INTO recipe_ratings (recipe_id, rating, email)
-	        VALUES (:recipeId, :rating, :email)
-	        ON CONFLICT (recipe_id, email) 
-	        DO UPDATE SET rating = EXCLUDED.rating
-	    """;
+		String sql = "INSERT INTO recipe_ratings (recipe_id, rating, email) " + "VALUES (:recipeId, :rating, :email) "
+				+ "ON DUPLICATE KEY UPDATE rating = :rating";
 
-	    Map<String, Object> params = new HashMap<>();
-	    params.put("recipeId", recipeId);
-	    params.put("rating", rating);
-	    params.put("email", email);
+		Map<String, Object> params = new HashMap<>();
+		params.put("recipeId", recipeId);
+		params.put("rating", rating);
+		params.put("email", email);
 
-	    jdbcTemplate.update(sql, params);
+		jdbcTemplate.update(sql, params);
 
-	    updateRecipeRating(recipeId);
+		updateRecipeRating(recipeId);
 	}
+	
+	
+//	public void submitRating(String recipeId, Double rating, String email) {
+//	    String sql = """
+//	        INSERT INTO recipe_ratings (recipe_id, rating, email)
+//	        VALUES (:recipeId, :rating, :email)
+//	        ON CONFLICT (recipe_id, email) 
+//	        DO UPDATE SET rating = EXCLUDED.rating
+//	    """;
+//
+//	    Map<String, Object> params = new HashMap<>();
+//	    params.put("recipeId", recipeId);
+//	    params.put("rating", rating);
+//	    params.put("email", email);
+//
+//	    jdbcTemplate.update(sql, params);
+//
+//	    updateRecipeRating(recipeId);
+//	}
 
 
 	public void deleteUserRating(String recipeId, String email) {

@@ -131,42 +131,42 @@ public class UserRepository {
 		jdbcTemplate.update(INCREMENT_COUNT_SQL, params);
 	}
     
-//    public void saveUserPreferences(String email, UserPreferences preferences) {
-//        try {
-//            ObjectMapper mapper = new ObjectMapper();
-//            String jsonPrefs = mapper.writeValueAsString(preferences);
-//
-//            String sql = "INSERT INTO user_preferences (email, preferences_json) " +
-//                    "VALUES (:email, :preferencesJson) " +
-//                    "ON DUPLICATE KEY UPDATE preferences_json = :preferencesJson";
-//
-//            Map<String, Object> params = new HashMap<>();
-//            params.put("email", email);
-//            params.put("preferencesJson", jsonPrefs);
-//
-//            jdbcTemplate.update(sql, params); 
-//        } catch (Exception e) {
-//            throw new IllegalArgumentException("Error saving preferences: " + e.getMessage());
-//        }
-//
-//    }
-    
     public void saveUserPreferences(String email, UserPreferences preferences) {
-    try {
-        ObjectMapper mapper = new ObjectMapper();
-        String jsonPrefs = mapper.writeValueAsString(preferences);
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonPrefs = mapper.writeValueAsString(preferences);
 
-        String sql =
-    "INSERT INTO user_preferences (email, preferences_json) VALUES (?, ?::jsonb) " +
-    "ON CONFLICT (email) DO UPDATE SET preferences_json = EXCLUDED.preferences_json";
+            String sql = "INSERT INTO user_preferences (email, preferences_json) " +
+                    "VALUES (:email, :preferencesJson) " +
+                    "ON DUPLICATE KEY UPDATE preferences_json = :preferencesJson";
 
+            Map<String, Object> params = new HashMap<>();
+            params.put("email", email);
+            params.put("preferencesJson", jsonPrefs);
 
-        jdbcTemplatePure.update(sql, email, jsonPrefs);
+            jdbcTemplate.update(sql, params); 
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error saving preferences: " + e.getMessage());
+        }
 
-    } catch (Exception e) {
-        throw new IllegalArgumentException("Error saving preferences: " + e.getMessage(), e);
     }
-}
+    
+//    public void saveUserPreferences(String email, UserPreferences preferences) {
+//    try {
+//        ObjectMapper mapper = new ObjectMapper();
+//        String jsonPrefs = mapper.writeValueAsString(preferences);
+//
+//        String sql =
+//    "INSERT INTO user_preferences (email, preferences_json) VALUES (?, ?::jsonb) " +
+//    "ON CONFLICT (email) DO UPDATE SET preferences_json = EXCLUDED.preferences_json";
+//
+//
+//        jdbcTemplatePure.update(sql, email, jsonPrefs);
+//
+//    } catch (Exception e) {
+//        throw new IllegalArgumentException("Error saving preferences: " + e.getMessage(), e);
+//    }
+//}
 
 
         public UserPreferences getUserPreferences(String email) {
